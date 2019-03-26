@@ -1,0 +1,43 @@
+# Ignore everything including subdirectories.
+*
+!*/
+
+# Git.
+!*.gitignore
+
+# C/C++.
+!*.cpp
+!*.hpp
+!*.inl
+!*.h
+!*.pump
+!*.cc
+
+# Shaders.
+!*.vs.glsl
+!*.gs.glsl
+!*.cs.glsl
+
+# Lua.
+!*.lua
+
+# models
+!*.mtl
+!*.obj
+!*.hdr
+
+# Allow other.
+!*.md
+!premake5.exe
+!*.travis.yml
+
+# Allow data
+!source/scenes/*
+#!source/game/data/*
+#!source/game/data/graphics/
+#!source/game/data/graphics/*
+#!source/game/data/sfx/
+#!source/game/data/music/*
+
+# Exclude external libs
+#external/
