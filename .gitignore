@@ -4,6 +4,7 @@
 
 # Git.
 !*.gitignore
+!*.gitattributes
 
 # C/C++.
 !*.cpp
