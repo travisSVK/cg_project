@@ -13,6 +13,8 @@
 !*.h
 !*.pump
 !*.cc
+!*.lib
+!*.dll
 
 # Shaders.
 !*.frag
@@ -29,18 +31,12 @@
 # Allow other.
 !*.md
 !premake5.exe
-!*.travis.yml
 
 # Allow data
 !source/scenes/*
-#!source/game/data/*
-#!source/game/data/graphics/
-#!source/game/data/graphics/*
-#!source/game/data/sfx/
-#!source/game/data/music/*
 
 # Allow external libs
-!external/bin/*
+!external/*
 
 # Exclude builds
 builds/*
