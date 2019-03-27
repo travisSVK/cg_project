@@ -40,5 +40,5 @@
 #!source/game/data/sfx/
 #!source/game/data/music/*
 
-# Exclude external libs
-#external/
+# Allow external libs
+!external/bin/*
