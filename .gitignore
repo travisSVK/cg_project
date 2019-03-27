@@ -42,3 +42,6 @@
 
 # Allow external libs
 !external/bin/*
+
+# Exclude builds
+builds/*
