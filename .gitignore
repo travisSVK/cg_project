@@ -15,9 +15,8 @@
 !*.cc
 
 # Shaders.
-!*.vs.glsl
-!*.gs.glsl
-!*.cs.glsl
+!*.frag
+!*.vert
 
 # Lua.
 !*.lua

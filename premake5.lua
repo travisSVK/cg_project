@@ -138,5 +138,5 @@ end
 project "game"
     kind "ConsoleApp"
     location "source/game"
-    files { "source/game/**.h", "source/game/**.cpp" }
+    files { "source/game/**.h", "source/game/**.cpp", "source/game/shaders/**.frag", "source/game/shaders/**.vert" }
     use_labhelper()
