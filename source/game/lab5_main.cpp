@@ -193,8 +193,8 @@ void initGL()
 	// Load some models.
 	landingpadModel = labhelper::loadModelFromOBJ("../scenes/landingpad.obj");
 	cameraModel = labhelper::loadModelFromOBJ("../scenes/camera.obj");
-	//fighterModel = labhelper::loadModelFromOBJ("../scenes/NewShip.obj");
-    fighterModel = labhelper::loadModelFromOBJ("../scenes/tree.obj");
+	fighterModel = labhelper::loadModelFromOBJ("../scenes/NewShip.obj");
+    //fighterModel = labhelper::loadModelFromOBJ("../scenes/tree.obj");
 
 	// load and set up default shader
 	backgroundProgram = labhelper::loadShaderProgram("shaders/background.vert", "shaders/background.frag");

@@ -26,36 +26,24 @@ uniform int focusCoC;
 float calculateCoCRadius(float worldZ)
 {
     // default value for focus CoC
-    int CoCRadius = focusCoC;
+    float CoCRadius = focusCoC;
     // we are in the near blurry plane
     if(worldZ > nearSharpPlane)
     {
         CoCRadius = nearCoC;
-        // closer than near blurry plane, just clamp to max CoC for near blurry plane
-//        if(worldZ > nearBlurryPlane)
-//        {
-//            CoCRadius = nearCoC;
-//        }
-//        // else interpolate CoC value between near blurry and near sharp CoC values
-//        else
-//        {
-//            CoCRadius = int(((worldZ - nearSharpPlane) / (nearBlurryPlane - nearSharpPlane)) * (nearCoC - focusCoC));
-//        }
+        if(worldZ < nearBlurryPlane)
+        {
+            CoCRadius = ((worldZ - nearSharpPlane) / (nearBlurryPlane - nearSharpPlane)) * float(nearCoC - focusCoC);
+        }
     }
     // we are in the far blurry plane
     else if(worldZ < farSharpPlane)
     {
         CoCRadius = farCoC;
-        // farther than far blurry plane, just clamp to max CoC for far blurry plane
-//        if(worldZ < farBlurryPlane)
-//        {
-//            CoCRadius = farCoC;
-//        }
-//        // else interpolate CoC value between far blurry and far sharp CoC values
-//        else
-//        {
-//            CoCRadius = int(abs((farSharpPlane - worldZ) / (farSharpPlane - farBlurryPlane)) * (farCoC - focusCoC));
-//        }
+        if(worldZ > farBlurryPlane)
+        {
+            CoCRadius = ((farSharpPlane - worldZ) / (farSharpPlane - farBlurryPlane)) * float(farCoC - focusCoC);
+        }
     }
 
     return float(CoCRadius);
