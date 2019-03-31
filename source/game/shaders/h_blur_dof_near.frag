@@ -36,12 +36,14 @@ void main()
 {
 	vec4 result = vec4(0.0);
 	// do a 17 tap blur by sampling a biliniarly filtered texture.
-    float coc = textureRect(frameBufferTexture, gl_FragCoord.xy).w;
-    if(coc == 0.0f)
+    vec4 pixel = textureRect(frameBufferTexture, gl_FragCoord.xy);
+    float coc = pixel.w;
+    if(coc <= 0.0f)
     {
-        result = vec4(textureRect(frameBufferTexture, gl_FragCoord.xy).xyz, 1.0);
+        // calculate the 
+        result = vec4(pixel.xyz, 1.0);
     }
-    else
+    else if (coc > 0.0f)
     {
         // round the CoC to the nearest odd number to use in kernel
         int numOfSamples = (2 * int(coc / 2.0f)) + 1;
@@ -77,11 +79,18 @@ void main()
         ;
 	    for (int i = 0; i < numOfSamples; ++i)
         {
-	    	result += vec4(textureRect(frameBufferTexture, gl_FragCoord.xy + vec2(0.0, offsets[i])).xyz * weights[i], 1.0);
+            vec4 neighbor = textureRect(frameBufferTexture, gl_FragCoord.xy + vec2(offsets[i], 0.0));
+            if(neighbor.w > 0.0f)
+            {
+                result += vec4(neighbor.xyz * weights[i], 1.0);
+            }
+            else
+            {
+                result += vec4(pixel.xyz * weights[i], 1.0);
+            }
 	    }
     }
 	
-    // TODO compute coverage in alpha channel
     result.w = coc;
 	fragmentColor = result;
 }

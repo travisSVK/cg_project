@@ -18,7 +18,7 @@ float weights[9] = float[9](0.0125949685786212, 0.0513831777608629, 0.1359278107
 */
 vec4 textureRect(in sampler2D tex, vec2 rectangleCoord)
 {
-	return texture(tex, rectangleCoord / textureSize(tex, 0));
+	return texture(tex, rectangleCoord * 2 / textureSize(tex, 0));
 }
 
 /**

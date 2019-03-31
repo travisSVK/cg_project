@@ -33,7 +33,8 @@ float currentTime = 0.0f;
 ///////////////////////////////////////////////////////////////////////////////
 // Shader programs
 ///////////////////////////////////////////////////////////////////////////////
-GLuint backgroundProgram, shaderProgram, postFxShader, horizontalBlurShader, verticalBlurShader, cutoffShader, horizontalBlurDofShader, verticalBlurDofShader;
+GLuint backgroundProgram, shaderProgram, postFxShader, horizontalBlurShader, 
+verticalBlurShader, cutoffShader, hBlurDofFarShader, vBlurDofFarShader, hBlurDofNearShader, vBlurDofNearShader;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Environment
@@ -181,7 +182,6 @@ struct FboInfo {
 	}
 };
 
-
 void initGL()
 {
 	// enable Z-buffering
@@ -203,8 +203,10 @@ void initGL()
     horizontalBlurShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur.frag");
     verticalBlurShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur.frag");
     cutoffShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/cutoff.frag");
-    horizontalBlurDofShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur_dof.frag");
-    verticalBlurDofShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur_dof.frag");
+    hBlurDofFarShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/h_blur_dof_far.frag");
+    vBlurDofFarShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/v_blur_dof_far.frag");
+    hBlurDofNearShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/h_blur_dof_near.frag");
+    vBlurDofNearShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/v_blur_dof_near.frag");
 
 	///////////////////////////////////////////////////////////////////////////
 	// Load environment map
@@ -223,7 +225,7 @@ void initGL()
 	///////////////////////////////////////////////////////////////////////////
 	int w, h;
 	SDL_GetWindowSize(g_window, &w, &h);
-    const int numFbos = 5;
+    const int numFbos = 6;
     for (int i = 0; i < numFbos; i++)
         fboList.push_back(FboInfo(w, h));
 }
@@ -238,7 +240,7 @@ void drawScene(const mat4 &view, const mat4 &projection)
     labhelper::setUniformSlow(backgroundProgram, "farSharpPlane", -10.0f);
     labhelper::setUniformSlow(backgroundProgram, "nearBlurryPlane", 70.0f);
     labhelper::setUniformSlow(backgroundProgram, "farBlurryPlane", -70.0f);
-    labhelper::setUniformSlow(backgroundProgram, "farCoC", 9);
+    labhelper::setUniformSlow(backgroundProgram, "farCoC", -9);
     labhelper::setUniformSlow(backgroundProgram, "nearCoC", 9);
     labhelper::setUniformSlow(backgroundProgram, "focusCoC", 0);
 	labhelper::drawFullScreenQuad();
@@ -249,7 +251,7 @@ void drawScene(const mat4 &view, const mat4 &projection)
     labhelper::setUniformSlow(shaderProgram, "farSharpPlane", -10.0f);
     labhelper::setUniformSlow(shaderProgram, "nearBlurryPlane", 70.0f);
     labhelper::setUniformSlow(shaderProgram, "farBlurryPlane", -70.0f);
-    labhelper::setUniformSlow(shaderProgram, "farCoC", 9);
+    labhelper::setUniformSlow(shaderProgram, "farCoC", -9);
     labhelper::setUniformSlow(shaderProgram, "nearCoC", 9);
     labhelper::setUniformSlow(shaderProgram, "focusCoC", 0);
 
@@ -286,6 +288,26 @@ void drawScene(const mat4 &view, const mat4 &projection)
 	labhelper::render(fighterModel);
 }
 
+void separableBlur(GLuint hShader, GLuint vShader, const FboInfo &source, FboInfo &hBlurFbo, FboInfo &vBlurFbo)
+{
+    // horizontal blur
+    hBlurFbo.resize(hBlurFbo.width / 2, hBlurFbo.height / 2);
+    glViewport(0, 0, hBlurFbo.width, hBlurFbo.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, hBlurFbo.framebufferId);
+    glUseProgram(hShader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, source.colorTextureTarget);
+    labhelper::drawFullScreenQuad();
+
+    // vertical blur
+    vBlurFbo.resize(vBlurFbo.width / 2, vBlurFbo.height / 2);
+    glViewport(0, 0, vBlurFbo.width, vBlurFbo.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, vBlurFbo.framebufferId);
+    glUseProgram(vShader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, hBlurFbo.colorTextureTarget);
+    labhelper::drawFullScreenQuad();
+}
 
 
 void display()
@@ -348,6 +370,8 @@ void display()
 
     FboInfo &horizontalBlurFbo = fboList[2];
     FboInfo &verticalBlurFbo = fboList[3];
+    FboInfo &hBlurFboNear = fboList[4];
+    FboInfo &vBlurFboNear = fboList[5];
     
     if (currentEffect == PostProcessingEffect::Bloom)
     {
@@ -359,53 +383,19 @@ void display()
         glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
         labhelper::drawFullScreenQuad();
 
-        // horizontal blur
-        glBindFramebuffer(GL_FRAMEBUFFER, horizontalBlurFbo.framebufferId);
-        glUseProgram(horizontalBlurShader);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cutoffFbo.colorTextureTarget);
-        labhelper::drawFullScreenQuad();
-
-        // vertical blur
-        glBindFramebuffer(GL_FRAMEBUFFER, verticalBlurFbo.framebufferId);
-        glUseProgram(verticalBlurShader);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, horizontalBlurFbo.colorTextureTarget);
-        labhelper::drawFullScreenQuad();
-
+        separableBlur(horizontalBlurShader, verticalBlurShader, cutoffFbo, horizontalBlurFbo, verticalBlurFbo);
+        glViewport(0, 0, w, h);
     }
     if (currentEffect == PostProcessingEffect::Separable_blur)
     {
-        // horizontal blur
-        glBindFramebuffer(GL_FRAMEBUFFER, horizontalBlurFbo.framebufferId);
-        glUseProgram(horizontalBlurShader);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget); 
-        labhelper::drawFullScreenQuad();
-
-        // vertical blur
-        glBindFramebuffer(GL_FRAMEBUFFER, verticalBlurFbo.framebufferId);
-        glUseProgram(verticalBlurShader);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, horizontalBlurFbo.colorTextureTarget);
-        labhelper::drawFullScreenQuad();
+        separableBlur(horizontalBlurShader, verticalBlurShader, cameraFB, horizontalBlurFbo, verticalBlurFbo);
+        glViewport(0, 0, w, h);
     }
 
     if (currentEffect == PostProcessingEffect::DOF)
     {
-        // horizontal blur
-        glBindFramebuffer(GL_FRAMEBUFFER, horizontalBlurFbo.framebufferId);
-        glUseProgram(horizontalBlurDofShader);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
-        labhelper::drawFullScreenQuad();
-
-        // vertical blur
-        glBindFramebuffer(GL_FRAMEBUFFER, verticalBlurFbo.framebufferId);
-        glUseProgram(verticalBlurDofShader);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, horizontalBlurFbo.colorTextureTarget);
-        labhelper::drawFullScreenQuad();
+        separableBlur(hBlurDofFarShader, vBlurDofFarShader, cameraFB, horizontalBlurFbo, verticalBlurFbo);
+        glViewport(0, 0, w, h);
     }
 
 
@@ -428,7 +418,11 @@ void display()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glUseProgram( postFxShader );
     glActiveTexture(GL_TEXTURE0);
-    if ((currentEffect == PostProcessingEffect::Separable_blur) || (currentEffect == PostProcessingEffect::DOF))
+    if (currentEffect == PostProcessingEffect::Separable_blur)
+    {
+        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
+    }
+    else if (currentEffect == PostProcessingEffect::DOF)
     {
         glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
     }

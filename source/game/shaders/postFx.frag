@@ -23,6 +23,10 @@ uniform mat4 previousViewProjectionMatrix;
 */
 vec4 textureRect(in sampler2D tex, vec2 rectangleCoord)
 {
+    if(currentEffect == 7 || currentEffect == 8 || currentEffect == 10)
+    {
+        return texture(tex, rectangleCoord / 2 / textureSize(tex, 0));
+    }
 	return texture(tex, rectangleCoord / textureSize(tex, 0));
 }
 
