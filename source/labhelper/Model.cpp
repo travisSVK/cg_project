@@ -443,7 +443,20 @@ namespace labhelper
 				glUniform1i(glGetUniformLocation(current_program, "has_shininess_texture"), has_shininess_texture);
 				glUniform1i(glGetUniformLocation(current_program, "has_emission_texture"), has_emission_texture);
 				glUniform3fv(glGetUniformLocation(current_program, "material_color"), 1, &material.m_color.x);
-				glUniform3fv(glGetUniformLocation(current_program, "material_diffuse_color"), 1, &material.m_color.x); //FIXME: Compatibility with old shading model of lab3.
+
+                // @todo Stupid hack!
+                if (material.m_color_texture.valid)
+                {
+                    glActiveTexture(GL_TEXTURE10);
+                    glBindTexture(GL_TEXTURE_2D, material.m_color_texture.gl_id);
+				    glUniform1i(glGetUniformLocation(current_program, "material_texture"), 10); //FIXME: Compatibility with old shading model of lab3.
+				    glUniform1i(glGetUniformLocation(current_program, "has_texture"), 1); //FIXME: Compatibility with old shading model of lab3.
+                }
+                else 
+                {
+                    glUniform1i(glGetUniformLocation(current_program, "has_texture"), 0); //FIXME: Compatibility with old shading model of lab3.
+                }
+
 				glUniform3fv(glGetUniformLocation(current_program, "material_emissive_color"), 1, &material.m_color.x); //FIXME: Compatibility with old shading model of lab3.
 				glUniform1i(glGetUniformLocation(current_program, "has_diffuse_texture"), has_color_texture);//FIXME: Compatibility with old shading model of lab3.
 				glUniform1fv(glGetUniformLocation(current_program, "material_reflectivity"), 1, &material.m_reflectivity);

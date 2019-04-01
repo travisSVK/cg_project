@@ -13,6 +13,9 @@ uniform float material_fresnel;
 uniform float material_shininess;
 uniform float material_emission;
 
+uniform int has_texture;
+uniform sampler2D material_texture;
+
 uniform int has_emission_texture;
 layout(binding = 5) uniform sampler2D emissiveMap;
 
@@ -66,7 +69,7 @@ uniform vec3 viewSpaceLightPosition;
 ///////////////////////////////////////////////////////////////////////////////
 layout(location = 0) out vec4 fragmentColor;
 
-vec3 calculateDirectIllumiunation(vec3 wo, vec3 n)
+vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color)
 {
 	///////////////////////////////////////////////////////////////////////////
 	// Task 1.2 - Calculate the radiance Li from the light, and the direction
@@ -84,7 +87,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n)
         return vec3(0.0);
     }
     
-    vec3 diffuse_term = material_color * (1.0 / PI) * abs(dot(n, wi)) * li;
+    vec3 diffuse_term = material_color * texture_color * (1.0 / PI) * abs(dot(n, wi)) * li;
 
 	///////////////////////////////////////////////////////////////////////////
 	// Task 2 - Calculate the Torrance Sparrow BRDF and return the light 
@@ -102,15 +105,16 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n)
 	// Task 3 - Make your shader respect the parameters of our material model.
 	///////////////////////////////////////////////////////////////////////////
 	vec3 dielectric_term = brdf * (dot(n, wi)) * li + (1 - fresnel) * diffuse_term;
-    vec3 metal_term = brdf * material_color * (dot(n, wi)) * li;
+    vec3 metal_term = brdf * material_color * texture_color * (dot(n, wi)) * li;
     vec3 microfacet_term = material_metalness * metal_term + (1 - material_metalness) * dielectric_term;
 
     return material_reflectivity * microfacet_term + (1 - material_reflectivity) * diffuse_term;
     //return brdf * dot(n, wi) * li; //vec3(diffuse_term);
 }
 
-vec3 calculateIndirectIllumination(vec3 wo, vec3 n)
+vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color)
 {
+
 	///////////////////////////////////////////////////////////////////////////
 	// Task 5 - Lookup the irradiance from the irradiance map and calculate
 	//          the diffuse reflection
@@ -122,7 +126,7 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n)
 	if (phi < 0.0f) phi = phi + 2.0f * PI;
     vec2 lookup = vec2(phi / (2.0 * PI), theta / PI);
     // Dont know if the environment_multiplier
-    vec3 diffuse_term = material_color * (1.0 / PI) * environment_multiplier * texture(irradianceMap, lookup).rgb;
+    vec3 diffuse_term = material_color * texture_color * (1.0 / PI) * environment_multiplier * texture(irradianceMap, lookup).rgb;
 
     ///////////////////////////////////////////////////////////////////////////
 	// Task 6 - Look up in the reflection map from the perfect specular 
@@ -142,14 +146,15 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n)
     float fresnel = material_fresnel + (1 - material_fresnel) * pow((1 - dot(wh, wi)), 5);    
     // float shadowing = min(1, min(2 * ((dot(n, wh) * dot(n, wo)) / dot(wo, wh)), 2 * ((dot(n, wh) * dot(n, wi)) / dot(wo, wh))));
     vec3 dielectric_term = fresnel * li + (1 - fresnel) * diffuse_term;
-    vec3 metal_term = fresnel * material_color * li;
+    vec3 metal_term = fresnel * material_color * texture_color * li;
 
     vec3 microfacet_term = material_metalness * metal_term + (1 - material_metalness) * dielectric_term;
     return material_reflectivity * microfacet_term + (1 - material_reflectivity) * diffuse_term;
 }
 
-float calculateCoCRadius()
+float calculateCoCRadius(vec3 texture_color)
 {
+
     // default value for focus CoC
     float CoCRadius = focusCoC;
     // we are in the near blurry plane
@@ -178,16 +183,22 @@ void main()
 	vec3 wo = -normalize(viewSpacePosition);
 	vec3 n = normalize(viewSpaceNormal);
 
+    vec3 texture_color = vec3(1.0, 1.0, 1.0);
+    if (has_texture == 1)
+    {
+        texture_color = texture(material_texture, texCoord).xyz;
+    }
+
 	// Direct illumination
-	vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n);
+	vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n, texture_color);
 
 	// Indirect illumination
-	vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n);
+	vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, texture_color);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Add emissive term. If emissive texture exists, sample this term.
 	///////////////////////////////////////////////////////////////////////////
-	vec3 emission_term = material_emission * material_color;
+	vec3 emission_term = material_emission * material_color * texture_color;
 	if (has_emission_texture == 1) {
 		emission_term = texture(emissiveMap, texCoord).xyz;
 	}
@@ -197,5 +208,5 @@ void main()
 		indirect_illumination_term +
 		emission_term;
 
-    fragmentColor = vec4(fragmentColor.xyz, calculateCoCRadius());
+    fragmentColor = vec4(fragmentColor.xyz, calculateCoCRadius(texture_color));
 }

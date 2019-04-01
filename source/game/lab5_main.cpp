@@ -20,6 +20,11 @@ using namespace glm;
 
 #include <Model.h>
 #include "hdr.h"
+#include <windows.h>
+
+extern "C" {
+    _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
 
 using std::min;
 using std::max;
@@ -193,9 +198,10 @@ void initGL()
 	// Load some models.
 	landingpadModel = labhelper::loadModelFromOBJ("../scenes/landingpad.obj");
 	cameraModel = labhelper::loadModelFromOBJ("../scenes/camera.obj");
-	fighterModel = labhelper::loadModelFromOBJ("../scenes/NewShip.obj");
-    //fighterModel = labhelper::loadModelFromOBJ("../scenes/tree.obj");
 
+	//fighterModel = labhelper::loadModelFromOBJ("../scenes/NewShip.obj");
+    fighterModel = labhelper::loadModelFromOBJ("../scenes/testDice.obj");
+    
 	// load and set up default shader
 	backgroundProgram = labhelper::loadShaderProgram("shaders/background.vert", "shaders/background.frag");
 	shaderProgram     = labhelper::loadShaderProgram("shaders/simple.vert",     "shaders/simple.frag");
