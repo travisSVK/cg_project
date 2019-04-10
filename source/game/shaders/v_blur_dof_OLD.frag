@@ -133,7 +133,16 @@ void main()
         {
             for (int i = 0; i < finalNumOfSamples; ++i)
             {
-	        	result += vec4(textureRect(frameBufferTexture, gl_FragCoord.xy + vec2(0.0, offsets[i])).xyz * weights[i], 1.0);
+	        	vec4 neighbor = textureRect(frameBufferTexture, gl_FragCoord.xy + vec2(0.0, offsets[i]));
+                //result += vec4(neighbor.xyz * weights[i], 1.0);
+                if(neighbor.w < 0.0f)
+                {
+                    result += vec4(neighbor.xyz * weights[i], 1.0);
+                }
+                else
+                {
+                    result += vec4(pixel.xyz * weights[i], 1.0);
+                }
 	        }
         }
 	    else
@@ -152,5 +161,6 @@ void main()
 	        }
         }
     }
+    result.w = coc;
 	fragmentColor = result;
 }

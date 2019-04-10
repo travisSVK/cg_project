@@ -6,6 +6,7 @@ precision highp float;
 layout(binding = 0) uniform sampler2D frameBufferTexture;
 uniform float time;
 layout(location = 0) out vec4 fragmentColor;
+layout(location = 1) out vec4 nearResult;
 
 
 float offsets9[9] = float[9](-7.302940716, -5.35180578, -3.403984807, -1.458429517, 0.0, 1.458429517, 3.403984807, 5.35180578, 7.302940716);
@@ -24,7 +25,7 @@ float weights3[3] = float[3](0.311711, 0.376577, 0.311711);
 */
 vec4 textureRect(in sampler2D tex, vec2 rectangleCoord)
 {
-	return texture(tex, rectangleCoord * 2 / textureSize(tex, 0));
+	return texture(tex, rectangleCoord / textureSize(tex, 0));
 }
 
 /**
@@ -134,7 +135,16 @@ void main()
         {
             for (int i = 0; i < finalNumOfSamples; ++i)
             {
-	    	    result += vec4(textureRect(frameBufferTexture, gl_FragCoord.xy + vec2(offsets[i], 0.0)).xyz * weights[i], 1.0);
+                vec4 neighbor = textureRect(frameBufferTexture, gl_FragCoord.xy + vec2(offsets[i], 0.0));
+                //result += vec4(neighbor.xyz * weights[i], 1.0);
+	    	    if(neighbor.w < 0.0f)
+                {
+                    result += vec4(neighbor.xyz * weights[i], 1.0);
+                }
+                else
+                {
+                    result += vec4(pixel.xyz * weights[i], 1.0);
+                }
 	        }
         }
 	    else

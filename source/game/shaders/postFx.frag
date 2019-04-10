@@ -7,10 +7,19 @@ layout(binding = 0) uniform sampler2D frameBufferTexture;
 layout(binding = 1) uniform sampler2D blurredFrameBufferTexture;
 layout(binding = 2) uniform sampler2D depthBufferTexture;
 layout(binding = 3) uniform sampler2D bloomTexture;
+layout(binding = 4) uniform sampler2D focusFarDoFBuffer;
+layout(binding = 5) uniform sampler2D nearDoFBuffer;
+layout(binding = 6) uniform sampler2D lensFlareTexture;
+layout(binding = 7) uniform sampler2D lensDirtTexture;
+layout(binding = 8) uniform sampler2D starburstTexture;
+
 uniform float time;
 uniform int currentEffect;
 uniform int filterSize;
 uniform int numSamples;
+uniform int maxCocRadius;
+uniform float uGlobalBrightness;
+uniform float uStarburstOffset;
 
 layout(location = 0) out vec4 fragmentColor;
 uniform mat4 viewProjectionInverseMatrix;
@@ -23,10 +32,6 @@ uniform mat4 previousViewProjectionMatrix;
 */
 vec4 textureRect(in sampler2D tex, vec2 rectangleCoord)
 {
-    if(currentEffect == 7 || currentEffect == 8 || currentEffect == 10)
-    {
-        return texture(tex, rectangleCoord / 2 / textureSize(tex, 0));
-    }
 	return texture(tex, rectangleCoord / textureSize(tex, 0));
 }
 
@@ -58,9 +63,15 @@ vec3 toSepiaTone(vec3 rgbSample);
 
 vec3 mosaic(vec2 coord);
 
+vec3 separableBlur(vec2 coord);
+
 vec3 motionBlur(vec2 coord);
 
 vec3 bloom(vec2 coord);
+
+vec3 dof(vec2 coord);
+
+vec3 lensFlare(vec2 coord);
 
 void main()
 {
@@ -89,7 +100,7 @@ void main()
 		fragmentColor = vec4(mosaic(gl_FragCoord.xy), 1.0);
 		break;
 	case 7:
-		fragmentColor = textureRect(frameBufferTexture, gl_FragCoord.xy); // place holder
+		fragmentColor = vec4(separableBlur(gl_FragCoord.xy), 1.0);
 		break;
 	case 8:
 		fragmentColor = vec4(bloom(gl_FragCoord.xy), 1.0);
@@ -98,8 +109,14 @@ void main()
 		fragmentColor = vec4(motionBlur(gl_FragCoord.xy), 1.0);
 		break;
     case 10:
-		fragmentColor = textureRect(frameBufferTexture, gl_FragCoord.xy);
+		fragmentColor = vec4(dof(gl_FragCoord.xy), 1.0);
 		break;
+    case 11:
+	    fragmentColor = vec4(lensFlare(gl_FragCoord.xy), 1.0);
+	    break;
+    default:
+        fragmentColor = textureRect(frameBufferTexture, gl_FragCoord.xy);
+        break;
 	}
 }
 
@@ -152,10 +169,62 @@ vec3 mosaic(vec2 coord)
 	return texture(frameBufferTexture, finalCoord).xyz;
 }
 
+vec3 dof(vec2 coord)
+{
+    vec3 result = vec3(0.0f);
+    const float coverageBoost = 1.5;
+    vec4 color = textureRect(frameBufferTexture, coord);
+    float cocRadius = color.a;
+    vec3 blurred = textureRect(focusFarDoFBuffer, coord / 2).rgb;
+    vec4 near    = textureRect(nearDoFBuffer, coord / 2);
+
+    float normRadius = cocRadius / float(maxCocRadius);
+    if (coverageBoost != 1.0f) {
+        float a = clamp(coverageBoost * near.a, 0, 1);
+        near.rgb = near.rgb * (a / max(near.a, 0.001f));
+        near.a = a;
+    }
+
+    // Decrease sharp image's contribution rapidly in the near field.
+    if (normRadius > 0.1) {
+        normRadius = min(normRadius * 1.5, 1.0);
+    }
+    // for near - take most of the near buffer blur, for far, take most of the far blurred, for focus, take the sharp color
+    result = mix(color.rgb, blurred, abs(normRadius)) * (1.0 - near.a) + near.rgb;
+    return result;
+    //return mix(color.rgb, blurred, abs(normRadius)).rgb;
+    //return near.rgb;
+}
+
+vec3 lensFlare(vec2 coord)
+{
+    vec3 result = vec3(0.0f);
+    vec3 color = textureRect(lensFlareTexture, coord / 2).rgb;
+    // starburst
+//    vec2 centerVec = color.xy - vec2(0.5);
+//	float d = length(centerVec);
+//	float radial = acos(centerVec.x / d);
+//	float mask = 
+//		  texture(starburstTexture, vec2(radial + uStarburstOffset * 1.0, 0.0)).r
+//		* texture(starburstTexture, vec2(radial - uStarburstOffset * 0.5, 0.0)).r;
+//	mask = saturate(mask + (1.0 - smoothstep(0.0, 0.3, d)));
+    // lens dirt
+    float mask = texture(lensDirtTexture, color.xy).r;
+    //result = textureRect(frameBufferTexture, coord).xyz + (color * mask * uGlobalBrightness);
+    result = textureRect(frameBufferTexture, coord).xyz + color * uGlobalBrightness;
+    return result;
+    //return color;
+}
+
 vec3 bloom(vec2 coord)
 {
-    vec2 newCoord = coord / textureSize(frameBufferTexture, 0);
-    vec3 color = texture(frameBufferTexture, newCoord).xyz + texture(bloomTexture, newCoord).xyz;
+    vec3 color = textureRect(frameBufferTexture, coord).xyz + textureRect(bloomTexture, coord / 2).xyz;
+	return color;
+}
+
+vec3 separableBlur(vec2 coord)
+{
+    vec3 color = textureRect(frameBufferTexture, coord / 2).xyz;
 	return color;
 }
 

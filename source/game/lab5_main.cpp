@@ -19,6 +19,7 @@ using namespace glm;
 #include "imgui_impl_sdl_gl3.h"
 
 #include <Model.h>
+#include "FlareManager.h"
 #include "hdr.h"
 
 using std::min;
@@ -34,7 +35,7 @@ float currentTime = 0.0f;
 // Shader programs
 ///////////////////////////////////////////////////////////////////////////////
 GLuint backgroundProgram, shaderProgram, postFxShader, horizontalBlurShader, 
-verticalBlurShader, cutoffShader, hBlurDofFarShader, vBlurDofFarShader, hBlurDofNearShader, vBlurDofNearShader;
+verticalBlurShader, cutoffShader, hBlurDofShader, vBlurDofShader, downsampleShader, pseudoLensFlareShader, lensFlareShader;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Environment
@@ -42,13 +43,14 @@ verticalBlurShader, cutoffShader, hBlurDofFarShader, vBlurDofFarShader, hBlurDof
 float environment_multiplier = 1.0f;
 GLuint environmentMap, irradianceMap, reflectionMap;
 const std::string envmap_base_name = "001";
+GLuint gradientTexture, lensDirtTexture, starburstTexture;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Light source
 ///////////////////////////////////////////////////////////////////////////////
 float point_light_intensity_multiplier = 1000.0f;
 vec3 point_light_color = vec3(1.f, 1.f, 1.f);
-const vec3 lightPosition = vec3(20.0f, 40.0f, 0.0f);
+const vec3 lightPosition = vec3(20.0f, 80.0f, -50.0f);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Camera parameters.
@@ -85,7 +87,9 @@ enum PostProcessingEffect
     Separable_blur = 7,
     Bloom = 8,
     Motion_Blur = 9,
-    DOF = 10
+    DOF = 10,
+    Pseudo_Lens_Flare = 11,
+    Lens_Flare = 12
 };
 
 int currentEffect = PostProcessingEffect::None;
@@ -94,6 +98,7 @@ int filterSizes[12] = {3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25};
 
 mat4 previousViewProjection;
 bool firstFrame = true;
+FlareManager* flareManager;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Framebuffers
@@ -105,6 +110,7 @@ std::vector<FboInfo> fboList;
 struct FboInfo {
 	GLuint framebufferId;
 	GLuint colorTextureTarget;
+    GLuint colorTextureTarget2;
 	GLuint depthBuffer;
 	int width;
 	int height;
@@ -117,8 +123,15 @@ struct FboInfo {
 		// Generate two textures and set filter parameters (no storage allocated yet)
 		glGenTextures(1, &colorTextureTarget);
 		glBindTexture(GL_TEXTURE_2D, colorTextureTarget);
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glGenTextures(1, &colorTextureTarget2);
+        glBindTexture(GL_TEXTURE_2D, colorTextureTarget2);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glGenTextures(1, &depthBuffer);
 		glBindTexture(GL_TEXTURE_2D, depthBuffer);
@@ -136,7 +149,12 @@ struct FboInfo {
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
         // bind the texture as color attachment 0 (to the currently bound framebuffer)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTextureTarget, 0);
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        // bind the texture as color attachment 1 (to the currently bound framebuffer)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, colorTextureTarget2, 0);
+        GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        glDrawBuffers(2, drawBuffers);
+        //glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
         // bind the texture as depth attachment (to the currently bound framebuffer)
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBuffer, 0);
 
@@ -151,6 +169,7 @@ struct FboInfo {
 	FboInfo() : isComplete(false)
 		, framebufferId(UINT32_MAX)
 		, colorTextureTarget(UINT32_MAX)
+        , colorTextureTarget2(UINT32_MAX)
 		, depthBuffer(UINT32_MAX)
 		, width(0)
 		, height(0)
@@ -162,6 +181,10 @@ struct FboInfo {
 		// Allocate a texture
 		glBindTexture(GL_TEXTURE_2D, colorTextureTarget);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+        // Allocate a texture
+        glBindTexture(GL_TEXTURE_2D, colorTextureTarget2);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
 		// generate a depth texture
 		glBindTexture(GL_TEXTURE_2D, depthBuffer);
@@ -195,6 +218,7 @@ void initGL()
 	cameraModel = labhelper::loadModelFromOBJ("../scenes/camera.obj");
 	fighterModel = labhelper::loadModelFromOBJ("../scenes/NewShip.obj");
     //fighterModel = labhelper::loadModelFromOBJ("../scenes/tree.obj");
+    sphereModel = labhelper::loadModelFromOBJ("../scenes/sphere.obj");
 
 	// load and set up default shader
 	backgroundProgram = labhelper::loadShaderProgram("shaders/background.vert", "shaders/background.frag");
@@ -203,10 +227,31 @@ void initGL()
     horizontalBlurShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur.frag");
     verticalBlurShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur.frag");
     cutoffShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/cutoff.frag");
-    hBlurDofFarShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/h_blur_dof_far.frag");
-    vBlurDofFarShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/v_blur_dof_far.frag");
-    hBlurDofNearShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/h_blur_dof_near.frag");
-    vBlurDofNearShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/v_blur_dof_near.frag");
+    hBlurDofShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "#version 420\n#define HORIZONTAL\n");
+    vBlurDofShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "" , "#version 420\n");
+    pseudoLensFlareShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/pseudo_lens_flare.frag");
+    //lensFlareShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/lens_flare.frag");
+    downsampleShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/downsample.frag");
+
+    // load color gradient texture for lens flare
+    int w, h, comp;
+    unsigned char* texture = stbi_load("../scenes/lens_dirt.png", &w, &h, &comp, STBI_rgb_alpha);
+    glGenTextures(1, &lensDirtTexture);
+    glBindTexture(GL_TEXTURE_2D, lensDirtTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture);
+    free(texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    
+    texture = stbi_load("../scenes/starburst.png", &w, &h, &comp, STBI_rgb_alpha);
+    glGenTextures(1, &starburstTexture);
+    glBindTexture(GL_TEXTURE_2D, starburstTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture);
+    free(texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Load environment map
@@ -219,15 +264,18 @@ void initGL()
 	reflectionMap = labhelper::loadHdrMipmapTexture(filenames);
 	environmentMap = labhelper::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + ".hdr");
 	irradianceMap = labhelper::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + "_irradiance.hdr");
+    gradientTexture = labhelper::loadHdrTexture("../scenes/ghost_color_gradient.psd");
 
 	///////////////////////////////////////////////////////////////////////////
 	// Setup Framebuffers
 	///////////////////////////////////////////////////////////////////////////
-	int w, h;
-	SDL_GetWindowSize(g_window, &w, &h);
-    const int numFbos = 6;
+	int width, height;
+	SDL_GetWindowSize(g_window, &width, &height);
+    const int numFbos = 8;
     for (int i = 0; i < numFbos; i++)
-        fboList.push_back(FboInfo(w, h));
+        fboList.push_back(FboInfo(width, height));
+
+    flareManager = new FlareManager(0.16f, width, height);
 }
 
 void drawScene(const mat4 &view, const mat4 &projection)
@@ -240,8 +288,8 @@ void drawScene(const mat4 &view, const mat4 &projection)
     labhelper::setUniformSlow(backgroundProgram, "farSharpPlane", -10.0f);
     labhelper::setUniformSlow(backgroundProgram, "nearBlurryPlane", 70.0f);
     labhelper::setUniformSlow(backgroundProgram, "farBlurryPlane", -70.0f);
-    labhelper::setUniformSlow(backgroundProgram, "farCoC", -9);
-    labhelper::setUniformSlow(backgroundProgram, "nearCoC", 9);
+    labhelper::setUniformSlow(backgroundProgram, "farCoC", -4);
+    labhelper::setUniformSlow(backgroundProgram, "nearCoC", 4);
     labhelper::setUniformSlow(backgroundProgram, "focusCoC", 0);
 	labhelper::drawFullScreenQuad();
 
@@ -251,8 +299,8 @@ void drawScene(const mat4 &view, const mat4 &projection)
     labhelper::setUniformSlow(shaderProgram, "farSharpPlane", -10.0f);
     labhelper::setUniformSlow(shaderProgram, "nearBlurryPlane", 70.0f);
     labhelper::setUniformSlow(shaderProgram, "farBlurryPlane", -70.0f);
-    labhelper::setUniformSlow(shaderProgram, "farCoC", -9);
-    labhelper::setUniformSlow(shaderProgram, "nearCoC", 9);
+    labhelper::setUniformSlow(shaderProgram, "farCoC", -4);
+    labhelper::setUniformSlow(shaderProgram, "nearCoC", 4);
     labhelper::setUniformSlow(shaderProgram, "focusCoC", 0);
 
 	// Light source
@@ -288,15 +336,83 @@ void drawScene(const mat4 &view, const mat4 &projection)
 	labhelper::render(fighterModel);
 }
 
-void separableBlur(GLuint hShader, GLuint vShader, const FboInfo &source, FboInfo &hBlurFbo, FboInfo &vBlurFbo)
+void debugDrawLight(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix, const glm::vec3 &worldSpaceLightPos)
 {
+    mat4 modelMatrix = glm::translate(worldSpaceLightPos);
+    glUseProgram(shaderProgram);
+    labhelper::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * modelMatrix);
+    labhelper::render(sphereModel);
+}
+
+void separableBlur(GLuint hShader, GLuint vShader, const FboInfo &source, FboInfo &downsampledFbo, FboInfo &hBlurFbo, FboInfo &vBlurFbo)
+{
+    // downsample 
+    downsampledFbo.resize(downsampledFbo.width / 2, downsampledFbo.height / 2);
+    glViewport(0, 0, downsampledFbo.width, downsampledFbo.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, downsampledFbo.framebufferId);
+    glUseProgram(downsampleShader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, source.colorTextureTarget);
+    labhelper::drawFullScreenQuad();
+
     // horizontal blur
     hBlurFbo.resize(hBlurFbo.width / 2, hBlurFbo.height / 2);
     glViewport(0, 0, hBlurFbo.width, hBlurFbo.height);
     glBindFramebuffer(GL_FRAMEBUFFER, hBlurFbo.framebufferId);
     glUseProgram(hShader);
     glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, downsampledFbo.colorTextureTarget);
+    labhelper::drawFullScreenQuad();
+
+    // vertical blur
+    vBlurFbo.resize(vBlurFbo.width / 2, vBlurFbo.height / 2);
+    glViewport(0, 0, vBlurFbo.width, vBlurFbo.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, vBlurFbo.framebufferId);
+    glUseProgram(vShader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, hBlurFbo.colorTextureTarget);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, hBlurFbo.colorTextureTarget2);
+    labhelper::drawFullScreenQuad();
+}
+
+void pseudoLensFlare(GLuint hShader, GLuint vShader, const FboInfo &source, FboInfo &lensFlareFbo, FboInfo &downsampledFbo, FboInfo &hBlurFbo, FboInfo &vBlurFbo)
+{
+    // downsample 
+    downsampledFbo.resize(downsampledFbo.width / 2, downsampledFbo.height / 2);
+    glViewport(0, 0, downsampledFbo.width, downsampledFbo.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, downsampledFbo.framebufferId);
+    glUseProgram(downsampleShader);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, source.colorTextureTarget);
+    labhelper::drawFullScreenQuad();
+
+    // horizontal blur
+    lensFlareFbo.resize(lensFlareFbo.width / 2, lensFlareFbo.height / 2);
+    glViewport(0, 0, lensFlareFbo.width, lensFlareFbo.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, lensFlareFbo.framebufferId);
+    glUseProgram(pseudoLensFlareShader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, downsampledFbo.colorTextureTarget);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gradientTexture);
+    labhelper::setUniformSlow(pseudoLensFlareShader, "uGhostCount", 4);
+    labhelper::setUniformSlow(pseudoLensFlareShader, "uGhostSpacing", 0.1f);
+    labhelper::setUniformSlow(pseudoLensFlareShader, "uGhostThreshold", 4.0f);
+    labhelper::setUniformSlow(pseudoLensFlareShader, "uHaloRadius", 0.6f);
+    labhelper::setUniformSlow(pseudoLensFlareShader, "uHaloThickness", 0.1f);
+    labhelper::setUniformSlow(pseudoLensFlareShader, "uHaloThreshold", 4.0f);
+    labhelper::setUniformSlow(pseudoLensFlareShader, "uHaloAspectRatio", 1.0f);
+    labhelper::setUniformSlow(pseudoLensFlareShader, "uChromaticAberration", 0.01f);
+    labhelper::drawFullScreenQuad();
+
+    // horizontal blur
+    hBlurFbo.resize(hBlurFbo.width / 2, hBlurFbo.height / 2);
+    glViewport(0, 0, hBlurFbo.width, hBlurFbo.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, hBlurFbo.framebufferId);
+    glUseProgram(hShader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, lensFlareFbo.colorTextureTarget);
     labhelper::drawFullScreenQuad();
 
     // vertical blur
@@ -308,7 +424,6 @@ void separableBlur(GLuint hShader, GLuint vShader, const FboInfo &source, FboInf
     glBindTexture(GL_TEXTURE_2D, hBlurFbo.colorTextureTarget);
     labhelper::drawFullScreenQuad();
 }
-
 
 void display()
 {
@@ -367,11 +482,14 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	drawScene(viewMatrix, projectionMatrix); // using both shaderProgram and backgroundProgram
+    debugDrawLight(viewMatrix, projectionMatrix, lightPosition);
 
     FboInfo &horizontalBlurFbo = fboList[2];
     FboInfo &verticalBlurFbo = fboList[3];
     FboInfo &hBlurFboNear = fboList[4];
     FboInfo &vBlurFboNear = fboList[5];
+    FboInfo &downsampledFbo = fboList[6];
+    FboInfo &lensFlareFbo = fboList[7];
     
     if (currentEffect == PostProcessingEffect::Bloom)
     {
@@ -383,21 +501,25 @@ void display()
         glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
         labhelper::drawFullScreenQuad();
 
-        separableBlur(horizontalBlurShader, verticalBlurShader, cutoffFbo, horizontalBlurFbo, verticalBlurFbo);
+        separableBlur(horizontalBlurShader, verticalBlurShader, cutoffFbo, downsampledFbo, horizontalBlurFbo, verticalBlurFbo);
         glViewport(0, 0, w, h);
     }
     if (currentEffect == PostProcessingEffect::Separable_blur)
     {
-        separableBlur(horizontalBlurShader, verticalBlurShader, cameraFB, horizontalBlurFbo, verticalBlurFbo);
+        separableBlur(horizontalBlurShader, verticalBlurShader, cameraFB, downsampledFbo, horizontalBlurFbo, verticalBlurFbo);
         glViewport(0, 0, w, h);
     }
 
     if (currentEffect == PostProcessingEffect::DOF)
     {
-        separableBlur(hBlurDofFarShader, vBlurDofFarShader, cameraFB, horizontalBlurFbo, verticalBlurFbo);
+        separableBlur(hBlurDofShader, vBlurDofShader, cameraFB, downsampledFbo, horizontalBlurFbo, verticalBlurFbo);
         glViewport(0, 0, w, h);
     }
-
+    if (currentEffect == PostProcessingEffect::Pseudo_Lens_Flare)
+    {
+        pseudoLensFlare(horizontalBlurShader, verticalBlurShader, cameraFB, lensFlareFbo, downsampledFbo, horizontalBlurFbo, verticalBlurFbo);
+        glViewport(0, 0, w, h);
+    }
 
 	// camera (obj-model)
 	glUseProgram(shaderProgram);
@@ -424,13 +546,28 @@ void display()
     }
     else if (currentEffect == PostProcessingEffect::DOF)
     {
+        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
+        glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget2);
     }
     else if (currentEffect == PostProcessingEffect::Bloom)
     {
         glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
+    }
+    else if (currentEffect == PostProcessingEffect::Pseudo_Lens_Flare)
+    {
+        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, lensDirtTexture);
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, starburstTexture);
+        labhelper::setUniformSlow(postFxShader, "uGlobalBrightness", 0.01f);
     }
     else
     {
@@ -445,7 +582,13 @@ void display()
     labhelper::setUniformSlow(postFxShader, "viewProjectionInverseMatrix", inverse(projectionMatrix * viewMatrix));
     labhelper::setUniformSlow(postFxShader, "previousViewProjectionMatrix", previousViewProjection);
     labhelper::setUniformSlow(postFxShader, "numSamples", 3);
+    labhelper::setUniformSlow(postFxShader, "maxCocRadius", 4);
     labhelper::drawFullScreenQuad();
+
+    if (currentEffect == PostProcessingEffect::Lens_Flare)
+    {
+        flareManager->render(viewMatrix, projectionMatrix, lightPosition);
+    }
 
     previousViewProjection = projectionMatrix * viewMatrix;
 
@@ -533,6 +676,8 @@ void gui()
 	ImGui::RadioButton("Bloom", &currentEffect, PostProcessingEffect::Bloom);
     ImGui::RadioButton("Motion blur", &currentEffect, PostProcessingEffect::Motion_Blur);
     ImGui::RadioButton("DOF", &currentEffect, PostProcessingEffect::DOF);
+    ImGui::RadioButton("Pseudo Lens flare", &currentEffect, PostProcessingEffect::Pseudo_Lens_Flare);
+    ImGui::RadioButton("Lens flare", &currentEffect, PostProcessingEffect::Lens_Flare);
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	// ----------------------------------------------------------
 
@@ -572,6 +717,8 @@ int main(int argc, char *argv[])
 	labhelper::freeModel(cameraModel);
 	labhelper::freeModel(fighterModel);
 	labhelper::freeModel(sphereModel);
+    flareManager->destroy();
+    delete flareManager;
 
 	// Shut down everything. This includes the window and all other subsystems.
 	labhelper::shutDown(g_window);

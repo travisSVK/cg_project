@@ -420,19 +420,22 @@ namespace labhelper {
 
 
 
-	GLuint loadShaderProgram(const std::string &vertexShader, const std::string &fragmentShader, bool allow_errors)
+	GLuint loadShaderProgram(const std::string &vertexShader, const std::string &fragmentShader, 
+        const std::string &prependVertex, const std::string &prependFragment, bool allow_errors)
 	{
 		GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
 		GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
 
 		std::ifstream vs_file(vertexShader);
 		std::string vs_src((std::istreambuf_iterator<char>(vs_file)), std::istreambuf_iterator<char>());
+        std::string vs_final = prependVertex + vs_src;
 
 		std::ifstream fs_file(fragmentShader);
 		std::string fs_src((std::istreambuf_iterator<char>(fs_file)), std::istreambuf_iterator<char>());
+        std::string fs_final = prependFragment + fs_src;
 
-		const char *vs = vs_src.c_str();
-		const char *fs = fs_src.c_str();
+		const char *vs = vs_final.c_str();
+		const char *fs = fs_final.c_str();
 
 		glShaderSource(vShader, 1, &vs, nullptr);
 		glShaderSource(fShader, 1, &fs, nullptr);
@@ -537,6 +540,10 @@ namespace labhelper {
 	{
 		glUniform3fv(glGetUniformLocation(shaderProgram, name), 1, &value.x);
 	}
+    void setUniformSlow(GLuint shaderProgram, const char *name, const glm::vec4 &value)
+    {
+        glUniform4fv(glGetUniformLocation(shaderProgram, name), 1, &value.x);
+    }
 	void setUniformSlow(GLuint shaderProgram, const char *name, const uint32_t nof_values, const glm::vec3 * values)
 	{
 		glUniform3fv(glGetUniformLocation(shaderProgram, name), nof_values, (float *)values);

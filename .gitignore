@@ -23,17 +23,13 @@
 # Lua.
 !*.lua
 
-# models
-!*.mtl
-!*.obj
-!*.hdr
-
 # Allow other.
 !*.md
 !premake5.exe
 
 # Allow data
 !source/scenes/*
+!source/scenes/nlsFinland/*
 
 # Allow external libs
 !external/*

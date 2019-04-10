@@ -98,7 +98,8 @@ namespace labhelper {
 	 * The reason for this is that before linking we need to bind attribute locations, using
 	 * glBindAttribLocation and fragment data lications, using glBindFragDataLocation.
 	 */
-	GLuint loadShaderProgram(const std::string &vertexShader, const std::string &fragmentShader, bool allow_errors = false);
+	GLuint loadShaderProgram(const std::string &vertexShader, const std::string &fragmentShader,
+        const std::string &prependVertex = "", const std::string &prependFragment = "", bool allow_errors = false);
 	/**
 	 * Call to link a shader program prevoiusly loaded using loadShaderProgram.
 	 */
@@ -122,6 +123,7 @@ namespace labhelper {
 	void setUniformSlow(GLuint shaderProgram, const char *name, const float value);
 	void setUniformSlow(GLuint shaderProgram, const char *name, const GLint value);
 	void setUniformSlow(GLuint shaderProgram, const char *name, const glm::vec3 &value);
+    void setUniformSlow(GLuint shaderProgram, const char *name, const glm::vec4 &value);
 	void setUniformSlow(GLuint shaderProgram, const char *name, const uint32_t nof_values, const glm::vec3 * values);
 
 	/**

@@ -9,9 +9,13 @@ namespace labhelper
 		bool valid = false;
 		uint32_t gl_id;
 		std::string filename;
-		int width, height;
-		uint8_t * data;
+		int width, height, numComponents;
+        float scale;
+        glm::vec2 screenPosition;
+		uint8_t* data;
 		bool load(const std::string & filename, int nof_components);
+        void serialize(std::ofstream& myFile, std::ofstream& txtFile);
+        void deserialize(std::ifstream& myFile, std::ifstream& txtFile);
 	};
 	//////////////////////////////////////////////////////////////////////////////
 	// This material class implements a subset of the suggested PBR extension
@@ -37,6 +41,8 @@ namespace labhelper
 		Texture	m_metalness_texture;
 		Texture	m_fresnel_texture;
 		Texture	m_emission_texture;
+        void serialize(std::ofstream& myFile, std::ofstream& txtFile);
+        void deserialize(std::ifstream& myFile, std::ifstream& txtFile);
 	};
 
 	struct Mesh
@@ -46,6 +52,8 @@ namespace labhelper
 		// Where this Mesh's vertices start
 		uint32_t m_start_index; 
 		uint32_t m_number_of_vertices;
+        void serialize(std::ofstream& myFile, std::ofstream& txtFile);
+        void deserialize(std::ifstream& myFile, std::ifstream& txtFile);
 	};
 
 	class Model
@@ -70,10 +78,13 @@ namespace labhelper
 		uint32_t m_texture_coordinates_bo;
 		// Vertex Array Object
 		uint32_t m_vaob;
+        bool m_loaded;
 	};
 
 	Model * loadModelFromOBJ(std::string filename);
 	void saveModelToOBJ(Model * model, std::string filename);
 	void freeModel(Model * model);
 	void render(const Model * model, const bool submitMaterials = true); 
+    void saveModelBinary(Model * model, std::string filename);
+    Model * loadModelBinary(std::string filename);
 }
