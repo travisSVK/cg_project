@@ -378,8 +378,8 @@ namespace labhelper {
 		// On Win32 we'll use a message box. On !Win32, just print to stderr and abort()
 #if defined(_WIN32)
 		MessageBox(0, (LPCWSTR)errorString.c_str(), (LPCWSTR)title.c_str(), MB_OK | MB_ICONEXCLAMATION);
-#else
 		fprintf( stderr, "%s : %s\n", title.c_str(), errorString.c_str() );
+#else
 #endif
 		abort();
 	}
