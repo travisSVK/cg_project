@@ -17,6 +17,16 @@ namespace labhelper
         void serialize(std::ofstream& myFile, std::ofstream& txtFile);
         void deserialize(std::ifstream& myFile, std::ifstream& txtFile);
 	};
+
+    struct NormalMap
+    {
+        bool valid = false;
+        uint32_t gl_id;
+        std::string filename;
+        int width, height;
+        uint8_t * data;
+        bool load(const std::string & filename, int nof_components);
+    };
 	//////////////////////////////////////////////////////////////////////////////
 	// This material class implements a subset of the suggested PBR extension
 	// to the OBJ/MTL format, explained at: 
@@ -43,6 +53,7 @@ namespace labhelper
 		Texture	m_emission_texture;
         void serialize(std::ofstream& myFile, std::ofstream& txtFile);
         void deserialize(std::ifstream& myFile, std::ifstream& txtFile);
+        NormalMap normalMap;
 	};
 
 	struct Mesh
@@ -71,11 +82,21 @@ namespace labhelper
 		// Buffers on CPU
 		std::vector<glm::vec3> m_positions;
 		std::vector<glm::vec3> m_normals;
-		std::vector<glm::vec2> m_texture_coordinates; 
+		std::vector<glm::vec2> m_texture_coordinates;
+        
+        std::vector<glm::vec3> m_tangents;
+        std::vector<glm::vec3> m_bitTangents;
+
+        /*std::vector<glm::vec3> tangent;
+        std::vector<glm::vec3> binormal;*/
 		// Buffers on GPU
 		uint32_t m_positions_bo;
 		uint32_t m_normals_bo;
 		uint32_t m_texture_coordinates_bo;
+
+        uint32_t m_tangents_bo;
+        uint32_t m_bitTangents_bo;
+
 		// Vertex Array Object
 		uint32_t m_vaob;
         bool m_loaded;

@@ -42,25 +42,53 @@ namespace labhelper
 		return true; 
 	}
 
+    bool NormalMap::load(const std::string & _filename, int _components)
+    {
+        filename = _filename;
+        valid = true;
+        int components;
+        data = stbi_load(filename.c_str(), &width, &height, &components, _components);
+        if (data == nullptr) {
+            std::cout << "ERROR: loadModelFromOBJ(): Failed to load texture: " << filename << "\n";
+            exit(1);
+        }
+        glGenTextures(1, &gl_id);
+        glBindTexture(GL_TEXTURE_2D, gl_id);
+        GLenum format, internal_format;
+        if (_components == 1) { format = GL_R;  internal_format = GL_R8; }
+        else if (_components == 3) { format = GL_RGB; internal_format = GL_SRGB; }
+        else if (_components == 4) { format = GL_RGBA;  internal_format = GL_SRGB_ALPHA; }
+        else {
+            std::cout << "Texture loading not implemented for this number of compenents.\n";
+            exit(1);
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
+        return true;
+    }
+
 	///////////////////////////////////////////////////////////////////////////
 	// Destructor
 	///////////////////////////////////////////////////////////////////////////
 	Model::~Model()
 	{
-        if (m_loaded)
-        {
-            for (auto & material : m_materials) {
-                if (material.m_color_texture.valid) glDeleteTextures(1, &material.m_color_texture.gl_id);
-                if (material.m_reflectivity_texture.valid) glDeleteTextures(1, &material.m_reflectivity_texture.gl_id);
-                if (material.m_shininess_texture.valid) glDeleteTextures(1, &material.m_shininess_texture.gl_id);
-                if (material.m_metalness_texture.valid) glDeleteTextures(1, &material.m_metalness_texture.gl_id);
-                if (material.m_fresnel_texture.valid) glDeleteTextures(1, &material.m_fresnel_texture.gl_id);
-                if (material.m_emission_texture.valid) glDeleteTextures(1, &material.m_emission_texture.gl_id);
-            }
-            glDeleteBuffers(1, &m_positions_bo);
-            glDeleteBuffers(1, &m_normals_bo);
-            glDeleteBuffers(1, &m_texture_coordinates_bo);
-        }
+		for (auto & material : m_materials) {
+			if (material.m_color_texture.valid) glDeleteTextures(1, &material.m_color_texture.gl_id);
+			if (material.m_reflectivity_texture.valid) glDeleteTextures(1, &material.m_reflectivity_texture.gl_id);
+			if (material.m_shininess_texture.valid) glDeleteTextures(1, &material.m_shininess_texture.gl_id);
+			if (material.m_metalness_texture.valid) glDeleteTextures(1, &material.m_metalness_texture.gl_id);
+			if (material.m_fresnel_texture.valid) glDeleteTextures(1, &material.m_fresnel_texture.gl_id);
+			if (material.m_emission_texture.valid) glDeleteTextures(1, &material.m_emission_texture.gl_id);
+            if (material.normalMap.valid) glDeleteTextures(1, &material.normalMap.gl_id);
+		}
+		glDeleteBuffers(1, &m_positions_bo);
+		glDeleteBuffers(1, &m_normals_bo);
+		glDeleteBuffers(1, &m_texture_coordinates_bo);
 	}
 
 	Model * loadModelFromOBJ(std::string path)
@@ -140,6 +168,10 @@ namespace labhelper
                 material.m_emission = m.emission[0];
                 if (m.emissive_texname != "") {
                     material.m_emission_texture.load(directory + m.emissive_texname, 4);
+                }
+                if (m.bump_texname != "")
+                {
+                    material.normalMap.load(directory + m.bump_texname, 3);
                 }
                 material.m_transparency = m.transmittance[0];
                 model->m_materials.push_back(material);
@@ -222,7 +254,6 @@ namespace labhelper
                     mesh.m_material_idx = current_material_index;
                     mesh.m_start_index = vertices_so_far;
                     number_of_materials_in_shape += 1;
-
                     int number_of_faces = shape.mesh.indices.size() / 3;
                     for (int i = current_material_starting_face; i < number_of_faces; i++)
                     {
@@ -282,6 +313,44 @@ namespace labhelper
             saveModelBinary(model, directory + filename);
         }
         model->m_loaded = true;
+        for (int i = 0; i < model->m_positions.size(); i += 3)
+        {
+            glm::vec3 pos1 = model->m_positions.at(i);
+            glm::vec3 pos2 = model->m_positions.at(i + 1);
+            glm::vec3 pos3 = model->m_positions.at(i + 2);
+
+            // texture coordinates
+            glm::vec2 uv1 = model->m_texture_coordinates.at(i);
+            glm::vec2 uv2 = model->m_texture_coordinates.at(i + 1);
+            glm::vec2 uv3 = model->m_texture_coordinates.at(i + 2);
+
+            // normal vector
+            glm::vec3 nm(0.0, 0.0, 1.0);
+
+            glm::vec3 tangent1, bitangent1;
+
+            //calculate triangle edge and delta UV coords 
+            glm::vec3 edge1 = pos2 - pos1;
+            glm::vec3 edge2 = pos3 - pos1;
+            glm::vec2 deltaUV1 = uv2 - uv1;
+            glm::vec2 deltaUV2 = uv3 - uv1;
+
+            float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+            tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+            tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+            tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+            tangent1 = glm::normalize(tangent1);
+
+            bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+            bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+            bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+            bitangent1 = glm::normalize(bitangent1);
+
+            model->m_tangents.push_back(tangent1);
+            model->m_bitTangents.push_back(bitangent1);
+
+        }
 		///////////////////////////////////////////////////////////////////////
 		// Upload to GPU
 		///////////////////////////////////////////////////////////////////////
@@ -305,6 +374,20 @@ namespace labhelper
 			&model->m_texture_coordinates[0].x, GL_STATIC_DRAW);
 		glVertexAttribPointer(2, 2, GL_FLOAT, false, 0, 0);
 		glEnableVertexAttribArray(2);
+
+        glGenBuffers(1, &model->m_tangents_bo);
+        glBindBuffer(GL_ARRAY_BUFFER, model->m_tangents_bo);
+        glBufferData(GL_ARRAY_BUFFER, model->m_tangents.size() * sizeof(glm::vec3),
+            &model->m_tangents[0].x, GL_STATIC_DRAW);
+        glVertexAttribPointer(4, 3, GL_FLOAT, false, 0, 0);
+        glEnableVertexAttribArray(4);
+
+        glGenBuffers(1, &model->m_bitTangents_bo);
+        glBindBuffer(GL_ARRAY_BUFFER, model->m_bitTangents_bo);
+        glBufferData(GL_ARRAY_BUFFER, model->m_bitTangents.size() * sizeof(glm::vec3),
+            &model->m_bitTangents[0].x, GL_STATIC_DRAW);
+        glVertexAttribPointer(5, 3, GL_FLOAT, false, 0, 0);
+        glEnableVertexAttribArray(5);
 
 		std::cout << "done.\n";
 		return model; 
@@ -643,6 +726,8 @@ namespace labhelper
 				mat_file << "map_Pr " << directory + mat.m_shininess_texture.filename << "\n";
 			if (mat.m_emission_texture.valid)
 				mat_file << "map_Ke " << directory + mat.m_emission_texture.filename << "\n";
+            if (mat.m_emission_texture.valid)
+				mat_file << "map_bump " << directory + mat.normalMap.filename << "\n";
 		}
 		mat_file.close(); 
 
@@ -715,6 +800,7 @@ namespace labhelper
 				bool has_fresnel_texture = material.m_fresnel_texture.valid;
 				bool has_shininess_texture = material.m_shininess_texture.valid;
 				bool has_emission_texture = material.m_emission_texture.valid;
+                bool has_normalMap = material.normalMap.valid;
 				if (has_color_texture) glBindTextures(0, 1, &material.m_color_texture.gl_id);
 				if (has_reflectivity_texture) glBindTextures(1, 1, &material.m_reflectivity_texture.gl_id);
 				if (has_metalness_texture) glBindTextures(2, 1, &material.m_metalness_texture.gl_id);
@@ -737,7 +823,10 @@ namespace labhelper
                 {
                     glActiveTexture(GL_TEXTURE10);
                     glBindTexture(GL_TEXTURE_2D, material.m_color_texture.gl_id);
+                    glActiveTexture(GL_TEXTURE11);
+                    glBindTexture(GL_TEXTURE_2D, material.normalMap.gl_id);
 				    glUniform1i(glGetUniformLocation(current_program, "material_texture"), 10); //FIXME: Compatibility with old shading model of lab3.
+                    glUniform1i(glGetUniformLocation(current_program, "normalMap"), 11);
 				    glUniform1i(glGetUniformLocation(current_program, "has_texture"), 1); //FIXME: Compatibility with old shading model of lab3.
                 }
                 else 

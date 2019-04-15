@@ -16,6 +16,8 @@ uniform float material_emission;
 uniform int has_texture;
 uniform sampler2D material_texture;
 
+uniform sampler2D normalMap;
+
 uniform int has_emission_texture;
 layout(binding = 5) uniform sampler2D emissiveMap;
 
@@ -40,6 +42,14 @@ uniform int nearCoC;
 uniform int focusCoC;
 in float worldZ;
 
+in VS_OUT {
+    vec3 FragPos;
+    vec2 TexCoords;
+    vec3 TangentLightPos;
+    vec3 TangentViewPos;
+    vec3 TangentFragPos;
+} fs_in;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Light source
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,13 +73,14 @@ in vec3 viewSpacePosition;
 ///////////////////////////////////////////////////////////////////////////////
 uniform mat4 viewInverse;
 uniform vec3 viewSpaceLightPosition;
+uniform mat4 normalMatrix;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Output color
 ///////////////////////////////////////////////////////////////////////////////
 layout(location = 0) out vec4 fragmentColor;
 
-vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color)
+vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color, vec3 lightDir)
 {
 	///////////////////////////////////////////////////////////////////////////
 	// Task 1.2 - Calculate the radiance Li from the light, and the direction
@@ -83,6 +94,10 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color)
 	// Task 1.3 - Calculate the diffuse term and return that as the result
 	///////////////////////////////////////////////////////////////////////////
     vec3 wi = normalize(viewSpaceLightPosition - viewSpacePosition);
+    if (has_texture  == 1)
+    {
+        wi = lightDir;
+    }
     if (dot(n, wi) <= 0) {
         return vec3(0.0);
     }
@@ -112,7 +127,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color)
     //return brdf * dot(n, wi) * li; //vec3(diffuse_term);
 }
 
-vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color)
+vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color, vec3 lightDir)
 {
 
 	///////////////////////////////////////////////////////////////////////////
@@ -134,6 +149,10 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color)
 	/////////////////////////////////////////////////////////////////////////
     
     vec3 wi = normalize(reflect(-wo, n));
+    if (has_texture == 1)
+    {
+        wi = lightDir;
+    }
 
     theta = acos(max(-1.0f, min(1.0f, wi.y)));
 	phi = atan(wi.z, wi.x);
@@ -184,16 +203,27 @@ void main()
 	vec3 n = normalize(viewSpaceNormal);
 
     vec3 texture_color = vec3(1.0, 1.0, 1.0);
+    vec3 lightDir = vec3(0.0f,0.0f,0.0f);
     if (has_texture == 1)
     {
         texture_color = texture(material_texture, texCoord).xyz;
+        // obtain normal from normal map
+        n = texture(normalMap, fs_in.TexCoords).rgb;
+        // transform normal vector to range [-1,1]
+        n = normalize(n * 2.0 - 1.0);
+
+        lightDir = (fs_in.TangentLightPos * normalize(viewSpaceLightPosition - fs_in.FragPos));
+        wo = -(fs_in.TangentViewPos * normalize(viewSpacePosition - fs_in.FragPos));  
+
+        //n = normalize(normalMatrix * vec4(n, 0.0f)).xyz;
+        //normal = normalize(fs_in.TBN * normal);
     }
 
 	// Direct illumination
-	vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n, texture_color);
+	vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n, texture_color, lightDir);
 
 	// Indirect illumination
-	vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, texture_color);
+	vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, texture_color, lightDir);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Add emissive term. If emissive texture exists, sample this term.
@@ -207,6 +237,8 @@ void main()
 		direct_illumination_term +
 		indirect_illumination_term +
 		emission_term;
+
+    //normal = texture(normalMap, fs_in.texCoord).rgb;
 
     fragmentColor = vec4(fragmentColor.xyz, calculateCoCRadius(texture_color));
 }
