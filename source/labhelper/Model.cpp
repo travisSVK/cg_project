@@ -91,6 +91,10 @@ namespace labhelper
 		glDeleteBuffers(1, &m_texture_coordinates_bo);
 	}
 
+
+    unsigned int quadVAO = 0;
+    unsigned int quadVBO;
+
 	Model * loadModelFromOBJ(std::string path)
 	{
 		///////////////////////////////////////////////////////////////////////
@@ -116,7 +120,7 @@ namespace labhelper
 		extension = filename.substr(separator, filename.size() - separator);
 		filename = filename.substr(0, separator);
         // check if model loaded before
-        Model* model = loadModelBinary(directory + filename);
+        Model* model = nullptr;// = loadModelBinary(directory + filename);
         if (!model)
         {
             ///////////////////////////////////////////////////////////////////////
@@ -324,9 +328,6 @@ namespace labhelper
             glm::vec2 uv2 = model->m_texture_coordinates.at(i + 1);
             glm::vec2 uv3 = model->m_texture_coordinates.at(i + 2);
 
-            // normal vector
-            glm::vec3 nm(0.0, 0.0, 1.0);
-
             glm::vec3 tangent1, bitangent1;
 
             //calculate triangle edge and delta UV coords 
@@ -337,7 +338,7 @@ namespace labhelper
 
             float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
 
-            tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+            /*tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
             tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
             tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
             tangent1 = glm::normalize(tangent1);
@@ -345,9 +346,19 @@ namespace labhelper
             bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
             bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
             bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+            bitangent1 = glm::normalize(bitangent1);*/
+            tangent1 = (edge1 * deltaUV2.y - edge2 * deltaUV1.y) * f;
+            bitangent1 = (edge2 * deltaUV1.x - edge1 * deltaUV2.x) * f;
+
+            tangent1 = glm::normalize(tangent1);
             bitangent1 = glm::normalize(bitangent1);
 
+
             model->m_tangents.push_back(tangent1);
+            model->m_tangents.push_back(tangent1);
+            model->m_tangents.push_back(tangent1);
+            model->m_bitTangents.push_back(bitangent1);
+            model->m_bitTangents.push_back(bitangent1);
             model->m_bitTangents.push_back(bitangent1);
 
         }
