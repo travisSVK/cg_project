@@ -8,7 +8,7 @@ namespace engine
     Scene::Scene(const glm::vec3& cameraPosition, const glm::vec3& cameraDirection)
     {
         m_camera = new Camera(cameraPosition, cameraDirection);
-        m_sceneProgram = engine::loadShaderProgram("shaders/simple.vert", "shaders/simple.frag");
+        m_sceneProgram = engine::loadShaderProgram("shaders/simple.vert", "shaders/simple.frag", "", "");
     }
 
     Camera* Scene::getCamera()

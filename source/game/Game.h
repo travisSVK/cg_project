@@ -1,6 +1,7 @@
 #pragma once
 #include "postfx/PostFxManager.h"
 #include <SDL_video.h>
+#include "terrain/Heightfield.h"
 
 namespace engine 
 {
@@ -37,4 +38,5 @@ private:
     int m_height;
     engine::PostFxManager::PostFxTypes m_currentEffect;
     bool m_useLensFlare;
+    engine::HeightField m_heightfield;
 };

@@ -13,12 +13,14 @@ uniform float material_fresnel;
 uniform float material_shininess;
 uniform float material_emission;
 
+uniform int has_material_color;
 uniform int has_texture;
 uniform sampler2D material_texture;
 
 uniform sampler2D normalMap;
 
 uniform int has_emission_texture;
+layout(binding = 1) uniform sampler2D colorMap;
 layout(binding = 5) uniform sampler2D emissiveMap;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -94,7 +96,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color, vec3 ligh
 	// Task 1.3 - Calculate the diffuse term and return that as the result
 	///////////////////////////////////////////////////////////////////////////
     vec3 wi = normalize(viewSpaceLightPosition - viewSpacePosition);
-    if (has_texture  == 1)
+    if (has_texture == 1)
     {
         //wi = lightDir;
     }
@@ -102,7 +104,12 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color, vec3 ligh
         return vec3(0.0);
     }
     
-    vec3 diffuse_term = texture_color * (1.0 / PI) * abs(dot(n, wi)) * li;
+    vec3 materialColor = material_color;
+    if(has_material_color == 0){
+        materialColor = vec3(1.0f);
+    }
+
+    vec3 diffuse_term = materialColor * texture_color * (1.0 / PI) * abs(dot(n, wi)) * li;
 
 	///////////////////////////////////////////////////////////////////////////
 	// Task 2 - Calculate the Torrance Sparrow BRDF and return the light 
@@ -141,7 +148,11 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color, vec3 lig
 	if (phi < 0.0f) phi = phi + 2.0f * PI;
     vec2 lookup = vec2(phi / (2.0 * PI), theta / PI);
     // Dont know if the environment_multiplier
-    vec3 diffuse_term = texture_color * (1.0 / PI) * environment_multiplier * texture(irradianceMap, lookup).rgb;
+    vec3 materialColor = material_color;
+    if(has_material_color == 0){
+        materialColor = vec3(1.0f);
+    }
+    vec3 diffuse_term = materialColor * texture_color * (1.0 / PI) * environment_multiplier * texture(irradianceMap, lookup).rgb;
 
     ///////////////////////////////////////////////////////////////////////////
 	// Task 6 - Look up in the reflection map from the perfect specular 
@@ -171,7 +182,7 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color, vec3 lig
     return material_reflectivity * microfacet_term + (1 - material_reflectivity) * diffuse_term;
 }
 
-float calculateCoCRadius(vec3 texture_color)
+float calculateCoCRadius()
 {
 
     // default value for focus CoC
@@ -202,7 +213,7 @@ void main()
 	vec3 wo = -normalize(viewSpacePosition);
 	vec3 n = normalize(viewSpaceNormal);
 
-    vec3 texture_color = vec3(1.0, 1.0, 1.0);
+    vec3 texture_color = texture(colorMap, texCoord).xyz;
     vec3 lightDir = vec3(1.0,1.0,1.0);
     if (has_texture == 1)
     {
@@ -257,6 +268,6 @@ void main()
 
         //normal = texture(normalMap, fs_in.texCoord).rgb;
 
-        fragmentColor = vec4(fragmentColor.xyz, calculateCoCRadius(texture_color));
+        fragmentColor = vec4(fragmentColor.xyz, calculateCoCRadius());
     }
 }

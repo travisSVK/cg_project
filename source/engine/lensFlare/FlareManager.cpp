@@ -10,7 +10,7 @@ namespace engine
 {
     FlareManager::FlareManager(float spacing, int width, int heigt) : m_spacing(spacing), m_screenWidth(width), m_screenHeight(heigt)
 {
-    m_flareRenderer = new FlareRenderer(engine::loadShaderProgram("shaders/lens_flare.vert", "shaders/lens_flare.frag"));
+    m_flareRenderer = new FlareRenderer(engine::loadShaderProgram("shaders/lens_flare.vert", "shaders/lens_flare.frag", "", ""));
     loadTextures();
 }
 

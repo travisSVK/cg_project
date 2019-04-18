@@ -14,7 +14,7 @@ namespace engine
 
     void EnvironmentManager::createEnvironmentProgram(const char* vertPath, const char* fragPath)
     {
-         m_environmentProgram = engine::loadShaderProgram(vertPath, fragPath);
+         m_environmentProgram = engine::loadShaderProgram(vertPath, fragPath, "", "");
     }
 
     void EnvironmentManager::createEnvironmentTexture(const char* path, EnvironmentTextureType textureId)

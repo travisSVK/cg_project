@@ -28,7 +28,7 @@ void Game::initialize()
     m_window = engine::init_window_SDL("Game");
 
     m_modelManager = new engine::ModelManager();
-    m_environmentManager = new engine::EnvironmentManager(1.0f);
+    m_environmentManager = new engine::EnvironmentManager(1.5f);
     
     // setup environment
     const int roughnesses = 8;
@@ -52,6 +52,9 @@ void Game::initialize()
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::FighterModel)));
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
     m_useLensFlare = false;
+    m_heightfield.generateMesh(8);
+    m_heightfield.loadHeightField("../scenes/nlsFinland/L3123F.png");
+    m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/L3123F_downscaled.jpg");
     initGL();
 }
 
@@ -149,6 +152,10 @@ void Game::render()
     m_postfxManager->setShaderValues(m_currentEffect, m_environmentManager->getEnvironmentProgram());
     m_environmentManager->renderEnvironment(projectionMatrix, viewMatrix, m_scene->getCamera()->getPosition());
     
+    // render terrain
+    m_heightfield.useProgram();
+    m_heightfield.submitTriangles(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier());
+
     // render scene
     glUseProgram(m_scene->getSceneProgram());
     m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
@@ -156,6 +163,12 @@ void Game::render()
 
     // render post fx
     m_postfxManager->renderPostFx(m_currentEffect, m_mainFrameBuffer, projectionMatrix, viewMatrix);
+
+    if (m_useLensFlare)
+    {
+        // TODO pass suns position
+        // m_flareManager->render(viewMatrix, projectionMatrix, );
+    }
 
     CHECK_GL_ERROR();
 

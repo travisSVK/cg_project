@@ -19,6 +19,8 @@
 # Shaders.
 !*.frag
 !*.vert
+!*.tese
+!*.tesc
 
 # Lua.
 !*.lua

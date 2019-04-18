@@ -420,11 +420,13 @@ namespace engine {
 
 
 
-	GLuint loadShaderProgram(const std::string &vertexShader, const std::string &fragmentShader, 
+	GLuint loadShaderProgram(const std::string &vertexShader, const std::string &fragmentShader, const std::string &tcs, const std::string &tes,
         const std::string &prependVertex, const std::string &prependFragment, bool allow_errors)
 	{
 		GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
 		GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
+        GLuint csShader;
+        GLuint eshader;
 
 		std::ifstream vs_file(vertexShader);
 		std::string vs_src((std::istreambuf_iterator<char>(vs_file)), std::istreambuf_iterator<char>());
@@ -471,6 +473,54 @@ namespace engine {
 		}
 
 		GLuint shaderProgram = glCreateProgram();
+
+        if (!tcs.empty() && !tes.empty())
+        {
+            csShader = glCreateShader(GL_TESS_CONTROL_SHADER);
+            eshader = glCreateShader(GL_TESS_EVALUATION_SHADER);
+            std::ifstream cs_file(tcs);
+            std::string cs_src((std::istreambuf_iterator<char>(cs_file)), std::istreambuf_iterator<char>());
+
+            std::ifstream es_file(tes);
+            std::string es_src((std::istreambuf_iterator<char>(es_file)), std::istreambuf_iterator<char>());
+            const char *cs = cs_src.c_str();
+            const char *es = es_src.c_str();
+            glShaderSource(csShader, 1, &cs, nullptr);
+            glShaderSource(eshader, 1, &es, nullptr);
+
+            glCompileShader(csShader);
+            glGetShaderiv(csShader, GL_COMPILE_STATUS, &compileOk);
+            if (!compileOk)
+            {
+                std::string err = GetShaderInfoLog(csShader);
+                if (allow_errors) {
+                    non_fatal_error(err, "Fragment Shader");
+                }
+                else {
+                    fatal_error(err, "Fragment Shader");
+                }
+                return 0;
+            }
+
+            glCompileShader(eshader);
+            glGetShaderiv(eshader, GL_COMPILE_STATUS, &compileOk);
+            if (!compileOk)
+            {
+                std::string err = GetShaderInfoLog(eshader);
+                if (allow_errors) {
+                    non_fatal_error(err, "Fragment Shader");
+                }
+                else {
+                    fatal_error(err, "Fragment Shader");
+                }
+                return 0;
+            }
+            glAttachShader(shaderProgram, csShader);
+            glDeleteShader(csShader);
+            glAttachShader(shaderProgram, eshader);
+            glDeleteShader(eshader);
+        }
+
 		glAttachShader(shaderProgram, fShader);
 		glDeleteShader(fShader);
 		glAttachShader(shaderProgram, vShader);

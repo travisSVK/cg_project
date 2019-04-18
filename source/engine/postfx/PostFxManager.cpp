@@ -8,14 +8,14 @@ namespace engine
 {
     PostFxManager::PostFxManager(int width, int height) : m_width(width), m_height(height), m_previousViewProjectionMat(glm::mat4(1.0f))
     {
-        m_postfxProgram = engine::loadShaderProgram("shaders/postFx.vert", "shaders/postFx.frag");
+        m_postfxProgram = engine::loadShaderProgram("shaders/postFx.vert", "shaders/postFx.frag", "", "");
 
         // create shared shaders here (like downsample and blur)
-        GLuint downsampleShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/downsample.frag");
-        GLuint hBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur.frag");
-        GLuint vBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur.frag");
-        GLuint hDofBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "#version 420\n#define HORIZONTAL\n");
-        GLuint vDofBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "#version 420\n");
+        GLuint downsampleShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/downsample.frag", "", "");
+        GLuint hBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur.frag", "", "");
+        GLuint vBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur.frag", "", "");
+        GLuint hDofBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "", "", "#version 420\n#define HORIZONTAL\n");
+        GLuint vDofBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "", "", "#version 420\n");
         m_programs.push_back(downsampleShader);
         m_programs.push_back(hBlurShader);
         m_programs.push_back(vBlurShader);

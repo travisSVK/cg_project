@@ -132,17 +132,17 @@ void initGL()
     //fighterModel = engine::loadModelFromOBJ("../scenes/testDice.obj");
     
 	// load and set up default shader
-	backgroundProgram = engine::loadShaderProgram("shaders/background.vert", "shaders/background.frag");
-	shaderProgram     = engine::loadShaderProgram("shaders/simple.vert",     "shaders/simple.frag");
-	postFxShader      = engine::loadShaderProgram("shaders/postFx.vert",     "shaders/postFx.frag");
-    horizontalBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur.frag");
-    verticalBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur.frag");
-    cutoffShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/cutoff.frag");
-    hBlurDofShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "#version 420\n#define HORIZONTAL\n");
-    vBlurDofShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "" , "#version 420\n");
-    pseudoLensFlareShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/pseudo_lens_flare.frag");
+	backgroundProgram = engine::loadShaderProgram("shaders/background.vert", "shaders/background.frag", "", "");
+	shaderProgram     = engine::loadShaderProgram("shaders/simple.vert",     "shaders/simple.frag", "", "");
+	postFxShader      = engine::loadShaderProgram("shaders/postFx.vert",     "shaders/postFx.frag", "", "");
+    horizontalBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur.frag", "", "");
+    verticalBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur.frag", "", "");
+    cutoffShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/cutoff.frag", "", "");
+    hBlurDofShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "", "", "#version 420\n#define HORIZONTAL\n");
+    vBlurDofShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "", "" , "#version 420\n");
+    pseudoLensFlareShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/pseudo_lens_flare.frag", "", "");
     //lensFlareShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/lens_flare.frag");
-    downsampleShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/downsample.frag");
+    downsampleShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/downsample.frag", "", "");
 
     // load color gradient texture for lens flare
     int w, h, comp;

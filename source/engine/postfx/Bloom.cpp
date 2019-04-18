@@ -9,7 +9,7 @@ namespace engine
         m_cutoffFbo = new engine::FboInfo(width, height, 1);
         m_hBlurFbo = new engine::FboInfo(width, height, 1);
         m_vBlurFbo = new engine::FboInfo(width, height, 1);
-        m_cutoffShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/cutoff.frag");
+        m_cutoffShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/cutoff.frag", "", "");
     }
 
     void Bloom::render(engine::FboInfo* source)

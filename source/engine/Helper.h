@@ -98,7 +98,7 @@ namespace engine {
 	 * The reason for this is that before linking we need to bind attribute locations, using
 	 * glBindAttribLocation and fragment data lications, using glBindFragDataLocation.
 	 */
-	GLuint loadShaderProgram(const std::string &vertexShader, const std::string &fragmentShader,
+	GLuint loadShaderProgram(const std::string &vertexShader, const std::string &fragmentShader, const std::string &tesc, const std::string &tese,
         const std::string &prependVertex = "", const std::string &prependFragment = "", bool allow_errors = false);
 	/**
 	 * Call to link a shader program prevoiusly loaded using loadShaderProgram.
