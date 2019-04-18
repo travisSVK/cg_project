@@ -18,7 +18,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
-#include "labhelper.h"
+#include "Helper.h"
 
 #include <cmath>
 #include <cstring>
@@ -42,7 +42,7 @@
 
 using std::vector; 
 
-namespace labhelper {
+namespace engine {
 
 	SDL_Window * init_window_SDL(std::string caption, int width, int height)
 	{
@@ -94,8 +94,8 @@ namespace labhelper {
 		ImGui_ImplSdlGL3_Init(window);
 
 		// Check OpenGL properties
-		labhelper::startupGLDiagnostics();
-		labhelper::setupGLDebugMessages();
+		engine::startupGLDiagnostics();
+        engine::setupGLDebugMessages();
 
 		// Flip textures vertically so they don't end up upside-down.
 		stbi_set_flip_vertically_on_load(true);
@@ -563,7 +563,7 @@ namespace labhelper {
 				{ worldSpaceLightPos.x, worldSpaceLightPos.y, worldSpaceLightPos.z },
 				{ 0.0f, 0.0f, 0.0f }
 			};
-			labhelper::createAddAttribBuffer(vertexArrayObject, positions, sizeof(positions), 0, 3, GL_FLOAT);
+			engine::createAddAttribBuffer(vertexArrayObject, positions, sizeof(positions), 0, 3, GL_FLOAT);
 		}
 		glBindVertexArray(vertexArrayObject);
 		glDrawArrays(GL_LINES, 0, nofVertices);
@@ -584,7 +584,7 @@ namespace labhelper {
 				{ -1.0f, -1.0f }, { 1.0f, -1.0f }, { 1.0f, 1.0f },
 				{ -1.0f, -1.0f }, { 1.0f, 1.0f }, {-1.0f, 1.0f}
 			};
-			labhelper::createAddAttribBuffer(vertexArrayObject, positions, sizeof(positions), 0, 2, GL_FLOAT);
+			engine::createAddAttribBuffer(vertexArrayObject, positions, sizeof(positions), 0, 2, GL_FLOAT);
 		}
 		glBindVertexArray(vertexArrayObject);
 		glDrawArrays(GL_TRIANGLES, 0, nofVertices);

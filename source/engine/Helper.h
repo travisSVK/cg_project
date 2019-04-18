@@ -42,9 +42,9 @@
  *	CHECK_GL_ERROR(); // see if glClear() generated an error
  */
 
-#define CHECK_GL_ERROR() { labhelper::checkGLError(__FILE__, __LINE__) && (__debugbreak(), 1); }
+#define CHECK_GL_ERROR() { engine::checkGLError(__FILE__, __LINE__) && (__debugbreak(), 1); }
 
-namespace labhelper {
+namespace engine {
 
 #if !defined(_WIN32)
 #	define __debugbreak() assert(false)

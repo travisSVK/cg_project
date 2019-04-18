@@ -14,18 +14,21 @@
 #include <glm/gtx/transform.hpp>
 using namespace glm;
 
-#include <labhelper.h>
+#include <Helper.h>
 #include "imgui.h"
 #include "imgui_impl_sdl_gl3.h"
 
-#include <Model.h>
-#include "FlareManager.h"
-#include "hdr.h"
+#include <model/Model.h>
+#include "lensFlare/FlareManager.h"
+#include "FboInfo.h"
+#include "environment/hdr.h"
 #include <windows.h>
 
-extern "C" {
-    _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-}
+#include "Game.h"
+
+//extern "C" {
+//    _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+//}
 
 using std::min;
 using std::max;
@@ -72,10 +75,10 @@ vec3 worldUp(0.0f, 1.0f, 0.0f);
 // Models
 ///////////////////////////////////////////////////////////////////////////////
 const std::string model_filename = "../scenes/NewShip.obj";
-labhelper::Model *landingpadModel = nullptr;
-labhelper::Model *fighterModel = nullptr;
-labhelper::Model *sphereModel = nullptr;
-labhelper::Model *cameraModel = nullptr;
+engine::Model *landingpadModel = nullptr;
+engine::Model *fighterModel = nullptr;
+engine::Model *sphereModel = nullptr;
+engine::Model *cameraModel = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Post processing effects
@@ -103,112 +106,12 @@ int filterSizes[12] = {3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25};
 
 mat4 previousViewProjection;
 bool firstFrame = true;
-FlareManager* flareManager;
+engine::FlareManager* flareManager;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Framebuffers
 ///////////////////////////////////////////////////////////////////////////////
-
-struct FboInfo;
-std::vector<FboInfo> fboList;
-
-struct FboInfo {
-	GLuint framebufferId;
-	GLuint colorTextureTarget;
-    GLuint colorTextureTarget2;
-	GLuint depthBuffer;
-	int width;
-	int height;
-	bool isComplete;
-
-	FboInfo(int w, int h) {
-		isComplete = false;
-		width = w;
-		height = h;
-		// Generate two textures and set filter parameters (no storage allocated yet)
-		glGenTextures(1, &colorTextureTarget);
-		glBindTexture(GL_TEXTURE_2D, colorTextureTarget);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glGenTextures(1, &colorTextureTarget2);
-        glBindTexture(GL_TEXTURE_2D, colorTextureTarget2);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		glGenTextures(1, &depthBuffer);
-		glBindTexture(GL_TEXTURE_2D, depthBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		// allocate storage for textures
-		resize(width, height);
-
-		///////////////////////////////////////////////////////////////////////
-		// Generate and bind framebuffer
-		///////////////////////////////////////////////////////////////////////
-		// >>> @task 1
-        glGenFramebuffers(1, &framebufferId);
-        glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-        // bind the texture as color attachment 0 (to the currently bound framebuffer)
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTextureTarget, 0);
-        // bind the texture as color attachment 1 (to the currently bound framebuffer)
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, colorTextureTarget2, 0);
-        GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-        glDrawBuffers(2, drawBuffers);
-        //glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-        // bind the texture as depth attachment (to the currently bound framebuffer)
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBuffer, 0);
-
-		// check if framebuffer is complete
-		isComplete = checkFramebufferComplete();
-
-		// bind default framebuffer, just in case.
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
-	// if no resolution provided
-	FboInfo() : isComplete(false)
-		, framebufferId(UINT32_MAX)
-		, colorTextureTarget(UINT32_MAX)
-        , colorTextureTarget2(UINT32_MAX)
-		, depthBuffer(UINT32_MAX)
-		, width(0)
-		, height(0)
-	{};
-
-	void resize(int w, int h) {
-		width = w;
-		height = h;
-		// Allocate a texture
-		glBindTexture(GL_TEXTURE_2D, colorTextureTarget);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-        // Allocate a texture
-        glBindTexture(GL_TEXTURE_2D, colorTextureTarget2);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-		// generate a depth texture
-		glBindTexture(GL_TEXTURE_2D, depthBuffer);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	}
-
-	bool checkFramebufferComplete(void) {
-		// Check that our FBO is correctly set up, this can fail if we have
-		// incompatible formats in a buffer, or for example if we specify an
-		// invalid drawbuffer, among things.
-		glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if (status != GL_FRAMEBUFFER_COMPLETE) {
-			labhelper::fatal_error("Framebuffer not complete");
-		}
-		
-		return (status == GL_FRAMEBUFFER_COMPLETE);
-	}
-};
+std::vector<engine::FboInfo> fboList;
 
 void initGL()
 {
@@ -219,27 +122,27 @@ void initGL()
 	glEnable(GL_CULL_FACE);
 
 	// Load some models.
-	landingpadModel = labhelper::loadModelFromOBJ("../scenes/landingpad.obj");
-	cameraModel = labhelper::loadModelFromOBJ("../scenes/camera.obj");
-	fighterModel = labhelper::loadModelFromOBJ("../scenes/NewShip.obj");
-    //fighterModel = labhelper::loadModelFromOBJ("../scenes/tree.obj");
-    sphereModel = labhelper::loadModelFromOBJ("../scenes/sphere.obj");
+	landingpadModel = engine::loadModelFromOBJ("../scenes/landingpad.obj");
+	cameraModel = engine::loadModelFromOBJ("../scenes/camera.obj");
+	//fighterModel = engine::loadModelFromOBJ("../scenes/NewShip.obj");
+    //fighterModel = engine::loadModelFromOBJ("../scenes/tree.obj");
+    sphereModel = engine::loadModelFromOBJ("../scenes/sphere.obj");
 
-	//fighterModel = labhelper::loadModelFromOBJ("../scenes/NewShip.obj");
-    fighterModel = labhelper::loadModelFromOBJ("../scenes/testDice.obj");
+	fighterModel = engine::loadModelFromOBJ("../scenes/NewShip.obj");
+    //fighterModel = engine::loadModelFromOBJ("../scenes/testDice.obj");
     
 	// load and set up default shader
-	backgroundProgram = labhelper::loadShaderProgram("shaders/background.vert", "shaders/background.frag");
-	shaderProgram     = labhelper::loadShaderProgram("shaders/simple.vert",     "shaders/simple.frag");
-	postFxShader      = labhelper::loadShaderProgram("shaders/postFx.vert",     "shaders/postFx.frag");
-    horizontalBlurShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur.frag");
-    verticalBlurShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur.frag");
-    cutoffShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/cutoff.frag");
-    hBlurDofShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "#version 420\n#define HORIZONTAL\n");
-    vBlurDofShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "" , "#version 420\n");
-    pseudoLensFlareShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/pseudo_lens_flare.frag");
-    //lensFlareShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/lens_flare.frag");
-    downsampleShader = labhelper::loadShaderProgram("shaders/postFx.vert", "shaders/downsample.frag");
+	backgroundProgram = engine::loadShaderProgram("shaders/background.vert", "shaders/background.frag");
+	shaderProgram     = engine::loadShaderProgram("shaders/simple.vert",     "shaders/simple.frag");
+	postFxShader      = engine::loadShaderProgram("shaders/postFx.vert",     "shaders/postFx.frag");
+    horizontalBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/horizontal_blur.frag");
+    verticalBlurShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/vertical_blur.frag");
+    cutoffShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/cutoff.frag");
+    hBlurDofShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "", "#version 420\n#define HORIZONTAL\n");
+    vBlurDofShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/blur_dof.frag", "" , "#version 420\n");
+    pseudoLensFlareShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/pseudo_lens_flare.frag");
+    //lensFlareShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/lens_flare.frag");
+    downsampleShader = engine::loadShaderProgram("shaders/postFx.vert", "shaders/downsample.frag");
 
     // load color gradient texture for lens flare
     int w, h, comp;
@@ -269,10 +172,10 @@ void initGL()
 	for (int i = 0; i < roughnesses; i++)
 		filenames.push_back("../scenes/envmaps/" + envmap_base_name + "_dl_" + std::to_string(i) + ".hdr");
 
-	reflectionMap = labhelper::loadHdrMipmapTexture(filenames);
-	environmentMap = labhelper::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + ".hdr");
-	irradianceMap = labhelper::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + "_irradiance.hdr");
-    gradientTexture = labhelper::loadHdrTexture("../scenes/ghost_color_gradient.psd");
+	reflectionMap = engine::loadHdrMipmapTexture(filenames);
+	environmentMap = engine::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + ".hdr");
+	irradianceMap = engine::loadHdrTexture("../scenes/envmaps/" + envmap_base_name + "_irradiance.hdr");
+    gradientTexture = engine::loadHdrTexture("../scenes/ghost_color_gradient.psd");
 
 	///////////////////////////////////////////////////////////////////////////
 	// Setup Framebuffers
@@ -281,156 +184,156 @@ void initGL()
 	SDL_GetWindowSize(g_window, &width, &height);
     const int numFbos = 8;
     for (int i = 0; i < numFbos; i++)
-        fboList.push_back(FboInfo(width, height));
+    {
+        fboList.push_back(engine::FboInfo(width, height, 2));
+    }
 
-    flareManager = new FlareManager(0.16f, width, height);
+    flareManager = new engine::FlareManager(0.16f, width, height);
 }
 
 void drawScene(const mat4 &view, const mat4 &projection)
 {
 	glUseProgram(backgroundProgram);
-	labhelper::setUniformSlow(backgroundProgram, "environment_multiplier", environment_multiplier);
-	labhelper::setUniformSlow(backgroundProgram, "inv_PV", inverse(projection * view));
-	labhelper::setUniformSlow(backgroundProgram, "camera_pos", cameraPosition);
-    labhelper::setUniformSlow(backgroundProgram, "nearSharpPlane", 10.0f);
-    labhelper::setUniformSlow(backgroundProgram, "farSharpPlane", -10.0f);
-    labhelper::setUniformSlow(backgroundProgram, "nearBlurryPlane", 70.0f);
-    labhelper::setUniformSlow(backgroundProgram, "farBlurryPlane", -70.0f);
-    labhelper::setUniformSlow(backgroundProgram, "farCoC", -4);
-    labhelper::setUniformSlow(backgroundProgram, "nearCoC", 4);
-    labhelper::setUniformSlow(backgroundProgram, "focusCoC", 0);
-	labhelper::drawFullScreenQuad();
+	engine::setUniformSlow(backgroundProgram, "environment_multiplier", environment_multiplier);
+	engine::setUniformSlow(backgroundProgram, "inv_PV", inverse(projection * view));
+	engine::setUniformSlow(backgroundProgram, "camera_pos", cameraPosition);
+    engine::setUniformSlow(backgroundProgram, "nearSharpPlane", 10.0f);
+    engine::setUniformSlow(backgroundProgram, "farSharpPlane", -10.0f);
+    engine::setUniformSlow(backgroundProgram, "nearBlurryPlane", 70.0f);
+    engine::setUniformSlow(backgroundProgram, "farBlurryPlane", -70.0f);
+    engine::setUniformSlow(backgroundProgram, "farCoC", -4);
+    engine::setUniformSlow(backgroundProgram, "nearCoC", 4);
+    engine::setUniformSlow(backgroundProgram, "focusCoC", 0);
+	engine::drawFullScreenQuad();
 
 	glUseProgram(shaderProgram);
     // set DOF variables
-    labhelper::setUniformSlow(shaderProgram, "nearSharpPlane", 10.0f);
-    labhelper::setUniformSlow(shaderProgram, "farSharpPlane", -10.0f);
-    labhelper::setUniformSlow(shaderProgram, "nearBlurryPlane", 70.0f);
-    labhelper::setUniformSlow(shaderProgram, "farBlurryPlane", -70.0f);
-    labhelper::setUniformSlow(shaderProgram, "farCoC", -4);
-    labhelper::setUniformSlow(shaderProgram, "nearCoC", 4);
-    labhelper::setUniformSlow(shaderProgram, "focusCoC", 0);
+    engine::setUniformSlow(shaderProgram, "nearSharpPlane", 10.0f);
+    engine::setUniformSlow(shaderProgram, "farSharpPlane", -10.0f);
+    engine::setUniformSlow(shaderProgram, "nearBlurryPlane", 70.0f);
+    engine::setUniformSlow(shaderProgram, "farBlurryPlane", -70.0f);
+    engine::setUniformSlow(shaderProgram, "farCoC", -4);
+    engine::setUniformSlow(shaderProgram, "nearCoC", 4);
+    engine::setUniformSlow(shaderProgram, "focusCoC", 0);
 
 	// Light source
 	vec4 viewSpaceLightPosition = view * vec4(lightPosition, 1.0f);
-	labhelper::setUniformSlow(shaderProgram, "point_light_color", point_light_color);
-	labhelper::setUniformSlow(shaderProgram, "point_light_intensity_multiplier", point_light_intensity_multiplier);
-	labhelper::setUniformSlow(shaderProgram, "viewSpaceLightPosition", vec3(viewSpaceLightPosition));
+	engine::setUniformSlow(shaderProgram, "point_light_color", point_light_color);
+	engine::setUniformSlow(shaderProgram, "point_light_intensity_multiplier", point_light_intensity_multiplier);
+	engine::setUniformSlow(shaderProgram, "viewSpaceLightPosition", vec3(viewSpaceLightPosition));
 
 	// Environment
-	labhelper::setUniformSlow(shaderProgram, "environment_multiplier", environment_multiplier);
+	engine::setUniformSlow(shaderProgram, "environment_multiplier", environment_multiplier);
 
 	// camera
-	labhelper::setUniformSlow(shaderProgram, "viewInverse", inverse(view));
+	engine::setUniformSlow(shaderProgram, "viewInverse", inverse(view));
 
 	// landing pad 
 	mat4 modelMatrix(1.0f);
-	labhelper::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projection * view * modelMatrix);
-	labhelper::setUniformSlow(shaderProgram, "modelViewMatrix", view * modelMatrix);
-	labhelper::setUniformSlow(shaderProgram, "normalMatrix", inverse(transpose(view * modelMatrix)));
-    labhelper::setUniformSlow(shaderProgram, "modelMatrix", modelMatrix);
+	engine::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projection * view * modelMatrix);
+	engine::setUniformSlow(shaderProgram, "modelViewMatrix", view * modelMatrix);
+	engine::setUniformSlow(shaderProgram, "normalMatrix", inverse(transpose(view * modelMatrix)));
+    engine::setUniformSlow(shaderProgram, "modelMatrix", modelMatrix);
 	
-	labhelper::render(landingpadModel);
+	engine::render(landingpadModel);
 
 	// Fighter
 	//mat4 fighterModelMatrix = translate(15.0f * worldUp) * rotate(currentTime * -float(M_PI) / 4.0f, worldUp);
     mat4 fighterModelMatrix = translate(15.0f * worldUp);
-	labhelper::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projection * view * fighterModelMatrix);
-	labhelper::setUniformSlow(shaderProgram, "modelViewMatrix", view * fighterModelMatrix);
-	labhelper::setUniformSlow(shaderProgram, "normalMatrix", inverse(transpose(view * fighterModelMatrix)));
-    labhelper::setUniformSlow(shaderProgram, "modelMatrix", fighterModelMatrix);
-    
-
-	labhelper::render(fighterModel);
+	engine::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projection * view * fighterModelMatrix);
+	engine::setUniformSlow(shaderProgram, "modelViewMatrix", view * fighterModelMatrix);
+	engine::setUniformSlow(shaderProgram, "normalMatrix", inverse(transpose(view * fighterModelMatrix)));
+    engine::setUniformSlow(shaderProgram, "modelMatrix", fighterModelMatrix);
+	engine::render(fighterModel);
 }
 
 void debugDrawLight(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix, const glm::vec3 &worldSpaceLightPos)
 {
     mat4 modelMatrix = glm::translate(worldSpaceLightPos);
     glUseProgram(shaderProgram);
-    labhelper::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * modelMatrix);
-    labhelper::render(sphereModel);
+    engine::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * modelMatrix);
+    engine::render(sphereModel);
 }
 
-void separableBlur(GLuint hShader, GLuint vShader, const FboInfo &source, FboInfo &downsampledFbo, FboInfo &hBlurFbo, FboInfo &vBlurFbo)
+void separableBlur(GLuint hShader, GLuint vShader, const engine::FboInfo &source, engine::FboInfo &downsampledFbo, engine::FboInfo &hBlurFbo, engine::FboInfo &vBlurFbo)
 {
     // downsample 
-    downsampledFbo.resize(downsampledFbo.width / 2, downsampledFbo.height / 2);
-    glViewport(0, 0, downsampledFbo.width, downsampledFbo.height);
-    glBindFramebuffer(GL_FRAMEBUFFER, downsampledFbo.framebufferId);
+    /*downsampledFbo.resize(downsampledFbo.getWidth() / 2, downsampledFbo.getHeight() / 2);
+    glViewport(0, 0, downsampledFbo.getWidth(), downsampledFbo.getHeight());
+    glBindFramebuffer(GL_FRAMEBUFFER, downsampledFbo.getFrameBufferId());
     glUseProgram(downsampleShader);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, source.colorTextureTarget);
-    labhelper::drawFullScreenQuad();
+    glBindTexture(GL_TEXTURE_2D, source.getColorTextureTarget(0));
+    engine::drawFullScreenQuad();*/
 
     // horizontal blur
-    hBlurFbo.resize(hBlurFbo.width / 2, hBlurFbo.height / 2);
-    glViewport(0, 0, hBlurFbo.width, hBlurFbo.height);
-    glBindFramebuffer(GL_FRAMEBUFFER, hBlurFbo.framebufferId);
+    //hBlurFbo.resize(hBlurFbo.getWidth() / 2, hBlurFbo.getHeight() / 2);
+    //glViewport(0, 0, hBlurFbo.getWidth(), hBlurFbo.getHeight());
+    glBindFramebuffer(GL_FRAMEBUFFER, hBlurFbo.getFrameBufferId());
     glUseProgram(hShader);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, downsampledFbo.colorTextureTarget);
-    labhelper::drawFullScreenQuad();
+    glBindTexture(GL_TEXTURE_2D, source.getColorTextureTarget(0));
+    engine::drawFullScreenQuad();
 
     // vertical blur
-    vBlurFbo.resize(vBlurFbo.width / 2, vBlurFbo.height / 2);
-    glViewport(0, 0, vBlurFbo.width, vBlurFbo.height);
-    glBindFramebuffer(GL_FRAMEBUFFER, vBlurFbo.framebufferId);
+    /*vBlurFbo.resize(vBlurFbo.getWidth() / 2, vBlurFbo.getHeight() / 2);
+    glViewport(0, 0, vBlurFbo.getWidth(), vBlurFbo.getHeight());*/
+    glBindFramebuffer(GL_FRAMEBUFFER, vBlurFbo.getFrameBufferId());
     glUseProgram(vShader);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, hBlurFbo.colorTextureTarget);
+    glBindTexture(GL_TEXTURE_2D, hBlurFbo.getColorTextureTarget(0));
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, hBlurFbo.colorTextureTarget2);
-    labhelper::drawFullScreenQuad();
+    glBindTexture(GL_TEXTURE_2D, hBlurFbo.getColorTextureTarget(1));
+    engine::drawFullScreenQuad();
 }
 
-void pseudoLensFlare(GLuint hShader, GLuint vShader, const FboInfo &source, FboInfo &lensFlareFbo, FboInfo &downsampledFbo, FboInfo &hBlurFbo, FboInfo &vBlurFbo)
+void pseudoLensFlare(GLuint hShader, GLuint vShader, const engine::FboInfo &source, engine::FboInfo &lensFlareFbo, engine::FboInfo &downsampledFbo, engine::FboInfo &hBlurFbo, engine::FboInfo &vBlurFbo)
 {
     // downsample 
-    downsampledFbo.resize(downsampledFbo.width / 2, downsampledFbo.height / 2);
-    glViewport(0, 0, downsampledFbo.width, downsampledFbo.height);
-    glBindFramebuffer(GL_FRAMEBUFFER, downsampledFbo.framebufferId);
+    downsampledFbo.resize(downsampledFbo.getWidth() / 2, downsampledFbo.getHeight() / 2);
+    glViewport(0, 0, downsampledFbo.getWidth(), downsampledFbo.getHeight());
+    glBindFramebuffer(GL_FRAMEBUFFER, downsampledFbo.getFrameBufferId());
     glUseProgram(downsampleShader);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, source.colorTextureTarget);
-    labhelper::drawFullScreenQuad();
+    glBindTexture(GL_TEXTURE_2D, source.getColorTextureTarget(0));
+    engine::drawFullScreenQuad();
 
     // horizontal blur
-    lensFlareFbo.resize(lensFlareFbo.width / 2, lensFlareFbo.height / 2);
-    glViewport(0, 0, lensFlareFbo.width, lensFlareFbo.height);
-    glBindFramebuffer(GL_FRAMEBUFFER, lensFlareFbo.framebufferId);
+    lensFlareFbo.resize(lensFlareFbo.getWidth() / 2, lensFlareFbo.getHeight() / 2);
+    glViewport(0, 0, lensFlareFbo.getWidth(), lensFlareFbo.getHeight());
+    glBindFramebuffer(GL_FRAMEBUFFER, lensFlareFbo.getFrameBufferId());
     glUseProgram(pseudoLensFlareShader);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, downsampledFbo.colorTextureTarget);
+    glBindTexture(GL_TEXTURE_2D, downsampledFbo.getColorTextureTarget(0));
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gradientTexture);
-    labhelper::setUniformSlow(pseudoLensFlareShader, "uGhostCount", 4);
-    labhelper::setUniformSlow(pseudoLensFlareShader, "uGhostSpacing", 0.1f);
-    labhelper::setUniformSlow(pseudoLensFlareShader, "uGhostThreshold", 4.0f);
-    labhelper::setUniformSlow(pseudoLensFlareShader, "uHaloRadius", 0.6f);
-    labhelper::setUniformSlow(pseudoLensFlareShader, "uHaloThickness", 0.1f);
-    labhelper::setUniformSlow(pseudoLensFlareShader, "uHaloThreshold", 4.0f);
-    labhelper::setUniformSlow(pseudoLensFlareShader, "uHaloAspectRatio", 1.0f);
-    labhelper::setUniformSlow(pseudoLensFlareShader, "uChromaticAberration", 0.01f);
-    labhelper::drawFullScreenQuad();
+    engine::setUniformSlow(pseudoLensFlareShader, "uGhostCount", 4);
+    engine::setUniformSlow(pseudoLensFlareShader, "uGhostSpacing", 0.1f);
+    engine::setUniformSlow(pseudoLensFlareShader, "uGhostThreshold", 4.0f);
+    engine::setUniformSlow(pseudoLensFlareShader, "uHaloRadius", 0.6f);
+    engine::setUniformSlow(pseudoLensFlareShader, "uHaloThickness", 0.1f);
+    engine::setUniformSlow(pseudoLensFlareShader, "uHaloThreshold", 4.0f);
+    engine::setUniformSlow(pseudoLensFlareShader, "uHaloAspectRatio", 1.0f);
+    engine::setUniformSlow(pseudoLensFlareShader, "uChromaticAberration", 0.01f);
+    engine::drawFullScreenQuad();
 
     // horizontal blur
-    hBlurFbo.resize(hBlurFbo.width / 2, hBlurFbo.height / 2);
-    glViewport(0, 0, hBlurFbo.width, hBlurFbo.height);
-    glBindFramebuffer(GL_FRAMEBUFFER, hBlurFbo.framebufferId);
+    hBlurFbo.resize(hBlurFbo.getWidth() / 2, hBlurFbo.getHeight() / 2);
+    glViewport(0, 0, hBlurFbo.getWidth(), hBlurFbo.getHeight());
+    glBindFramebuffer(GL_FRAMEBUFFER, hBlurFbo.getFrameBufferId());
     glUseProgram(hShader);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, lensFlareFbo.colorTextureTarget);
-    labhelper::drawFullScreenQuad();
+    glBindTexture(GL_TEXTURE_2D, lensFlareFbo.getColorTextureTarget(0));
+    engine::drawFullScreenQuad();
 
     // vertical blur
-    vBlurFbo.resize(vBlurFbo.width / 2, vBlurFbo.height / 2);
-    glViewport(0, 0, vBlurFbo.width, vBlurFbo.height);
-    glBindFramebuffer(GL_FRAMEBUFFER, vBlurFbo.framebufferId);
+    vBlurFbo.resize(vBlurFbo.getWidth() / 2, vBlurFbo.getHeight() / 2);
+    glViewport(0, 0, vBlurFbo.getWidth(), vBlurFbo.getHeight());
+    glBindFramebuffer(GL_FRAMEBUFFER, vBlurFbo.getFrameBufferId());
     glUseProgram(vShader);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, hBlurFbo.colorTextureTarget);
-    labhelper::drawFullScreenQuad();
+    glBindTexture(GL_TEXTURE_2D, hBlurFbo.getColorTextureTarget(0));
+    engine::drawFullScreenQuad();
 }
 
 void display()
@@ -442,7 +345,7 @@ void display()
 	SDL_GetWindowSize(g_window, &w, &h);
 
 	for (int i = 0; i < fboList.size(); i++) {
-		if (fboList[i].width != w || fboList[i].height != h)
+		if (fboList[i].getWidth() != w || fboList[i].getHeight() != h)
 			fboList[i].resize(w, h);
 	}
 
@@ -469,22 +372,22 @@ void display()
 	// draw scene from security camera
 	///////////////////////////////////////////////////////////////////////////
 	// >>> @task 2
-    FboInfo &securityFB = fboList[0];
-    glBindFramebuffer(GL_FRAMEBUFFER, securityFB.framebufferId);
-    glViewport(0, 0, securityFB.width, securityFB.height);
+    engine::FboInfo &securityFB = fboList[0];
+    glBindFramebuffer(GL_FRAMEBUFFER, securityFB.getFrameBufferId());
+    glViewport(0, 0, securityFB.getWidth(), securityFB.getHeight());
     glClearColor(0.2, 0.2, 0.8, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     drawScene(securityCamViewMatrix, securityCamProjectionMatrix);
 
-    labhelper::Material &screen = landingpadModel->m_materials[8];
-    screen.m_emission_texture.gl_id = securityFB.colorTextureTarget;
+    engine::Material &screen = landingpadModel->m_materials[8];
+    screen.m_emission_texture.gl_id = securityFB.getColorTextureTarget(0);
 
 	///////////////////////////////////////////////////////////////////////////
 	// draw scene from camera
 	///////////////////////////////////////////////////////////////////////////
-    FboInfo &cameraFB = fboList[1];
-    glBindFramebuffer(GL_FRAMEBUFFER, cameraFB.framebufferId);
+    engine::FboInfo &cameraFB = fboList[1];
+    glBindFramebuffer(GL_FRAMEBUFFER, cameraFB.getFrameBufferId());
     glViewport(0, 0, w, h);
 	glClearColor(0.2, 0.2, 0.8, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -492,22 +395,22 @@ void display()
 	drawScene(viewMatrix, projectionMatrix); // using both shaderProgram and backgroundProgram
     debugDrawLight(viewMatrix, projectionMatrix, lightPosition);
 
-    FboInfo &horizontalBlurFbo = fboList[2];
-    FboInfo &verticalBlurFbo = fboList[3];
-    FboInfo &hBlurFboNear = fboList[4];
-    FboInfo &vBlurFboNear = fboList[5];
-    FboInfo &downsampledFbo = fboList[6];
-    FboInfo &lensFlareFbo = fboList[7];
+    engine::FboInfo &horizontalBlurFbo = fboList[2];
+    engine::FboInfo &verticalBlurFbo = fboList[3];
+    engine::FboInfo &hBlurFboNear = fboList[4];
+    engine::FboInfo &vBlurFboNear = fboList[5];
+    engine::FboInfo &downsampledFbo = fboList[6];
+    engine::FboInfo &lensFlareFbo = fboList[7];
     
     if (currentEffect == PostProcessingEffect::Bloom)
     {
         // cutoff
-        FboInfo &cutoffFbo = fboList[4];
-        glBindFramebuffer(GL_FRAMEBUFFER, cutoffFbo.framebufferId);
+        engine::FboInfo &cutoffFbo = fboList[4];
+        glBindFramebuffer(GL_FRAMEBUFFER, cutoffFbo.getFrameBufferId());
         glUseProgram(cutoffShader);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
-        labhelper::drawFullScreenQuad();
+        glBindTexture(GL_TEXTURE_2D, cameraFB.getColorTextureTarget(0));
+        engine::drawFullScreenQuad();
 
         separableBlur(horizontalBlurShader, verticalBlurShader, cutoffFbo, downsampledFbo, horizontalBlurFbo, verticalBlurFbo);
         glViewport(0, 0, w, h);
@@ -531,11 +434,11 @@ void display()
 
 	// camera (obj-model)
 	glUseProgram(shaderProgram);
-	labhelper::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * inverse(securityCamViewMatrix) * scale(vec3(10.0f)) * rotate(float(M_PI), vec3(0.0f, 1.0, 0.0)));
-	labhelper::setUniformSlow(shaderProgram, "modelViewMatrix", viewMatrix * inverse(securityCamViewMatrix));
-	labhelper::setUniformSlow(shaderProgram, "normalMatrix", inverse(transpose(viewMatrix * inverse(securityCamViewMatrix))));
+	engine::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * inverse(securityCamViewMatrix) * scale(vec3(10.0f)) * rotate(float(M_PI), vec3(0.0f, 1.0, 0.0)));
+	engine::setUniformSlow(shaderProgram, "modelViewMatrix", viewMatrix * inverse(securityCamViewMatrix));
+	engine::setUniformSlow(shaderProgram, "normalMatrix", inverse(transpose(viewMatrix * inverse(securityCamViewMatrix))));
 	
-	labhelper::render(cameraModel);
+	//engine::render(cameraModel);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Post processing pass(es)
@@ -550,48 +453,48 @@ void display()
     glActiveTexture(GL_TEXTURE0);
     if (currentEffect == PostProcessingEffect::Separable_blur)
     {
-        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
+        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.getColorTextureTarget(0));
     }
     else if (currentEffect == PostProcessingEffect::DOF)
     {
-        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
+        glBindTexture(GL_TEXTURE_2D, cameraFB.getColorTextureTarget(0));
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
+        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.getColorTextureTarget(0));
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget2);
+        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.getColorTextureTarget(1));
     }
     else if (currentEffect == PostProcessingEffect::Bloom)
     {
-        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
+        glBindTexture(GL_TEXTURE_2D, cameraFB.getColorTextureTarget(0));
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
+        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.getColorTextureTarget(0));
     }
     else if (currentEffect == PostProcessingEffect::Pseudo_Lens_Flare)
     {
-        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
+        glBindTexture(GL_TEXTURE_2D, cameraFB.getColorTextureTarget(0));
         glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.colorTextureTarget);
+        glBindTexture(GL_TEXTURE_2D, verticalBlurFbo.getColorTextureTarget(0));
         glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_2D, lensDirtTexture);
         glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, starburstTexture);
-        labhelper::setUniformSlow(postFxShader, "uGlobalBrightness", 0.01f);
+        engine::setUniformSlow(postFxShader, "uGlobalBrightness", 0.01f);
     }
     else
     {
-        glBindTexture(GL_TEXTURE_2D, cameraFB.colorTextureTarget);
+        glBindTexture(GL_TEXTURE_2D, cameraFB.getColorTextureTarget(0));
     }
     
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, cameraFB.depthBuffer);
-    labhelper::setUniformSlow(postFxShader, "time", currentTime);
-    labhelper::setUniformSlow(postFxShader, "currentEffect", currentEffect);
-    labhelper::setUniformSlow(postFxShader, "filterSize", filterSizes[filterSize - 1]);
-    labhelper::setUniformSlow(postFxShader, "viewProjectionInverseMatrix", inverse(projectionMatrix * viewMatrix));
-    labhelper::setUniformSlow(postFxShader, "previousViewProjectionMatrix", previousViewProjection);
-    labhelper::setUniformSlow(postFxShader, "numSamples", 3);
-    labhelper::setUniformSlow(postFxShader, "maxCocRadius", 4);
-    labhelper::drawFullScreenQuad();
+    glBindTexture(GL_TEXTURE_2D, cameraFB.getDepthBuffer());
+    engine::setUniformSlow(postFxShader, "time", currentTime);
+    engine::setUniformSlow(postFxShader, "currentEffect", currentEffect);
+    engine::setUniformSlow(postFxShader, "filterSize", filterSizes[filterSize - 1]);
+    engine::setUniformSlow(postFxShader, "viewProjectionInverseMatrix", inverse(projectionMatrix * viewMatrix));
+    engine::setUniformSlow(postFxShader, "previousViewProjectionMatrix", previousViewProjection);
+    engine::setUniformSlow(postFxShader, "numSamples", 3);
+    engine::setUniformSlow(postFxShader, "maxCocRadius", 4);
+    engine::drawFullScreenQuad();
 
     if (currentEffect == PostProcessingEffect::Lens_Flare)
     {
@@ -695,9 +598,10 @@ void gui()
 
 int main(int argc, char *argv[])
 {
-	g_window = labhelper::init_window_SDL("OpenGL Lab 5");
-
-	initGL();
+	//g_window = engine::init_window_SDL("Game");
+    Game game;
+    game.initialize();
+	//initGL();
 
 	bool stopRendering = false;
 	auto startTime = std::chrono::system_clock::now();
@@ -708,27 +612,29 @@ int main(int argc, char *argv[])
 		currentTime = timeSinceStart.count();
 
 		// render to window
-		display();
-
+		//display();
+        game.render();
+        stopRendering = game.update();
 		// Render overlay GUI.
-		gui();
+		//gui();
 
 		// Swap front and back buffer. This frame will now been displayed.
-		SDL_GL_SwapWindow(g_window);
+		//SDL_GL_SwapWindow(g_window);
 
 		// check events (keyboard among other)
-		stopRendering = handleEvents();
+		//stopRendering = handleEvents();
 	}
 
 	// Free Models
-	labhelper::freeModel(landingpadModel);
-	labhelper::freeModel(cameraModel);
-	labhelper::freeModel(fighterModel);
-	labhelper::freeModel(sphereModel);
+	/*engine::freeModel(landingpadModel);
+	engine::freeModel(cameraModel);
+	engine::freeModel(fighterModel);
+	engine::freeModel(sphereModel);
     flareManager->destroy();
-    delete flareManager;
+    delete flareManager;*/
 
 	// Shut down everything. This includes the window and all other subsystems.
-	labhelper::shutDown(g_window);
+	//engine::shutDown(g_window);
+    game.destroy();
 	return 0;
 }

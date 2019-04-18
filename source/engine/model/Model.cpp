@@ -10,7 +10,7 @@
 #include <stb_image.h>
 #include <filesystem>
 
-namespace labhelper
+namespace engine
 {
 	bool Texture::load(const std::string & _filename, int _components) {
 		filename = _filename;
@@ -89,11 +89,13 @@ namespace labhelper
 		glDeleteBuffers(1, &m_positions_bo);
 		glDeleteBuffers(1, &m_normals_bo);
 		glDeleteBuffers(1, &m_texture_coordinates_bo);
+        glDeleteVertexArrays(1, &m_vaob);
 	}
 
-
-    unsigned int quadVAO = 0;
-    unsigned int quadVBO;
+    glm::mat4 Model::getModelMatrix()
+    {
+        return m_modelMatrix;
+    }
 
 	Model * loadModelFromOBJ(std::string path)
 	{
@@ -120,7 +122,7 @@ namespace labhelper
 		extension = filename.substr(separator, filename.size() - separator);
 		filename = filename.substr(0, separator);
         // check if model loaded before
-        Model* model = nullptr;// = loadModelBinary(directory + filename);
+        Model* model = nullptr; // loadModelBinary(directory + filename);
         if (!model)
         {
             ///////////////////////////////////////////////////////////////////////
@@ -314,7 +316,7 @@ namespace labhelper
                 }
             }
             // save object as binary to load it faster next time
-            saveModelBinary(model, directory + filename);
+            //saveModelBinary(model, directory + filename);
         }
         model->m_loaded = true;
         for (int i = 0; i < model->m_positions.size(); i += 3)
@@ -828,6 +830,7 @@ namespace labhelper
 				glUniform1i(glGetUniformLocation(current_program, "has_shininess_texture"), has_shininess_texture);
 				glUniform1i(glGetUniformLocation(current_program, "has_emission_texture"), has_emission_texture);
 				glUniform3fv(glGetUniformLocation(current_program, "material_color"), 1, &material.m_color.x);
+                glUniform3fv(glGetUniformLocation(current_program, "material_diffuse_color"), 1, &material.m_color.x);
 
                 // @todo Stupid hack!
                 if (material.m_color_texture.valid)
@@ -844,7 +847,7 @@ namespace labhelper
                 {
                     glUniform1i(glGetUniformLocation(current_program, "has_texture"), 0); //FIXME: Compatibility with old shading model of lab3.
                 }
-
+				glUniform3fv(glGetUniformLocation(current_program, "material_diffuse_color"), 1, &material.m_color.x); //FIXME: Compatibility with old shading model of lab3.
 				glUniform3fv(glGetUniformLocation(current_program, "material_emissive_color"), 1, &material.m_color.x); //FIXME: Compatibility with old shading model of lab3.
 				glUniform1i(glGetUniformLocation(current_program, "has_diffuse_texture"), has_color_texture);//FIXME: Compatibility with old shading model of lab3.
 				glUniform1fv(glGetUniformLocation(current_program, "material_reflectivity"), 1, &material.m_reflectivity);

@@ -1,14 +1,16 @@
 #include "FlareManager.h"
 #include "FlareRenderer.h"
 #include <stb_image.h>
-#include "labhelper.h"
+#include "../Helper.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 
-FlareManager::FlareManager(float spacing, int width, int heigt): m_spacing(spacing), m_screenWidth(width), m_screenHeight(heigt)
+namespace engine
 {
-    m_flareRenderer = new FlareRenderer(labhelper::loadShaderProgram("shaders/lens_flare.vert", "shaders/lens_flare.frag"));
+    FlareManager::FlareManager(float spacing, int width, int heigt) : m_spacing(spacing), m_screenWidth(width), m_screenHeight(heigt)
+{
+    m_flareRenderer = new FlareRenderer(engine::loadShaderProgram("shaders/lens_flare.vert", "shaders/lens_flare.frag"));
     loadTextures();
 }
 
@@ -48,15 +50,15 @@ glm::vec2 FlareManager::convertToScreenSpace(const glm::vec3& worldPos, const gl
 
 void FlareManager::loadTextures()
 {
-    labhelper::Texture tex1 = loadTexture("../scenes/tex1.png");
-    labhelper::Texture tex2 = loadTexture("../scenes/tex2.png");
-    labhelper::Texture tex3 = loadTexture("../scenes/tex3.png");
-    labhelper::Texture tex4 = loadTexture("../scenes/tex4.png");
-    labhelper::Texture tex5 = loadTexture("../scenes/tex5.png");
-    labhelper::Texture tex6 = loadTexture("../scenes/tex6.png");
-    labhelper::Texture tex7 = loadTexture("../scenes/tex7.png");
-    labhelper::Texture tex8 = loadTexture("../scenes/tex8.png");
-    labhelper::Texture tex9 = loadTexture("../scenes/tex9.png");
+    engine::Texture tex1 = loadTexture("../scenes/tex1.png");
+    engine::Texture tex2 = loadTexture("../scenes/tex2.png");
+    engine::Texture tex3 = loadTexture("../scenes/tex3.png");
+    engine::Texture tex4 = loadTexture("../scenes/tex4.png");
+    engine::Texture tex5 = loadTexture("../scenes/tex5.png");
+    engine::Texture tex6 = loadTexture("../scenes/tex6.png");
+    engine::Texture tex7 = loadTexture("../scenes/tex7.png");
+    engine::Texture tex8 = loadTexture("../scenes/tex8.png");
+    engine::Texture tex9 = loadTexture("../scenes/tex9.png");
 
     tex6.scale = 0.5f;
     m_textures.push_back(tex6);
@@ -90,12 +92,12 @@ void FlareManager::loadTextures()
     m_textures.push_back(tex8);
 }
 
-labhelper::Texture FlareManager::loadTexture(const char* path)
+engine::Texture FlareManager::loadTexture(const char* path)
 {
     int w, h, comp;
     unsigned char* image = stbi_load(path, &w, &h, &comp, STBI_rgb_alpha);
 
-    labhelper::Texture texture;
+    engine::Texture texture;
     glGenTextures(1, &texture.gl_id);
     glBindTexture(GL_TEXTURE_2D, texture.gl_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
@@ -107,5 +109,11 @@ labhelper::Texture FlareManager::loadTexture(const char* path)
 
 void FlareManager::destroy()
 {
+    for (auto texture : m_textures)
+    {
+        glDeleteTextures(1, &texture.gl_id);
+    }
+    m_flareRenderer->destroy();
     delete m_flareRenderer;
+}
 }

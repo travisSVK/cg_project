@@ -3,25 +3,21 @@
 //#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-namespace labhelper {
-	struct HDRImage {
-		int width, height, components;
-		float * data = nullptr;
-		// Constructor
-		HDRImage(const std::string & filename) {
-			stbi_set_flip_vertically_on_load(false);
-			data = stbi_loadf(filename.c_str(), &width, &height, &components, 3);
-			stbi_set_flip_vertically_on_load(true);
-			if (data == nullptr) {
-				std::cout << "Failed to load image: " << filename << ".\n";
-				exit(1);
-			}
-		};
-		// Destructor
-		~HDRImage() {
-			stbi_image_free(data);
-		};
-	};
+namespace engine {
+
+    HDRImage::HDRImage(const std::string & filename) {
+        stbi_set_flip_vertically_on_load(false);
+        data = stbi_loadf(filename.c_str(), &width, &height, &components, 3);
+        stbi_set_flip_vertically_on_load(true);
+        if (data == nullptr) {
+            std::cout << "Failed to load image: " << filename << ".\n";
+            exit(1);
+        }
+    };
+
+    HDRImage::~HDRImage() {
+        stbi_image_free(data);
+    };
 
 	GLuint loadHdrTexture(const std::string &filename) {
 		GLuint texId;

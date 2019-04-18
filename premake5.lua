@@ -100,10 +100,10 @@ workspace "CGProject"
         
     filter {}
 
-project "labhelper"
+project "engine"
     kind "StaticLib"
-    location "source/labhelper"
-    files { "source/labhelper/**.h", "source/labhelper/**.cpp" }
+    location "source/engine"
+    files { "source/engine/**.h", "source/engine/**.cpp" }
 
     includeSDL()
     linkSDL()
@@ -117,9 +117,9 @@ project "labhelper"
     includeStb()
     includeTiny()
 
-function use_labhelper()
-    includedirs "source/labhelper"
-    links "labhelper"
+function use_engine()
+    includedirs "source/engine"
+    links "engine"
     
     filter {}
     
@@ -139,4 +139,4 @@ project "game"
     kind "ConsoleApp"
     location "source/game"
     files { "source/game/**.h", "source/game/**.cpp", "source/game/shaders/**.frag", "source/game/shaders/**.vert" }
-    use_labhelper()
+    use_engine()

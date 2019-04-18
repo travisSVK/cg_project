@@ -3,7 +3,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace labhelper
+namespace engine
 {	
 	struct Texture {
 		bool valid = false;
@@ -100,6 +100,10 @@ namespace labhelper
 		// Vertex Array Object
 		uint32_t m_vaob;
         bool m_loaded;
+        glm::mat4 m_modelMatrix;
+    public:
+        glm::mat4 getModelMatrix();
+
 	};
 
 	Model * loadModelFromOBJ(std::string filename);
