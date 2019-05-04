@@ -31,7 +31,7 @@ namespace engine
         engine::setUniformSlow(program, "farBlurryPlane", -70.0f);
         engine::setUniformSlow(program, "farCoC", -4);
         engine::setUniformSlow(program, "nearCoC", 4);
-        engine::setUniformSlow(program, "focusCoC", 0);
+        engine::setUniformSlow(program, "focusCoC", 0.0f);
     }
 
     void DepthOfField::destroy()

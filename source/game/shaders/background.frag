@@ -21,7 +21,7 @@ uniform float nearBlurryPlane;
 uniform float farBlurryPlane;
 uniform int farCoC;
 uniform int nearCoC;
-uniform int focusCoC;
+uniform float focusCoC;
 
 float calculateCoCRadius(float worldZ)
 {

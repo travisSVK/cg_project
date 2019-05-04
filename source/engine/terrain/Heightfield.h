@@ -4,6 +4,7 @@
 
 namespace engine
 {
+    class Sun;
     class HeightField {
     public:
 
@@ -20,7 +21,7 @@ namespace engine
         void generateMesh(int tesselation);
 
         // render height map
-        void submitTriangles(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraWorldPos, float environmentMultiplier);
+        void render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraWorldPos, float environmentMultiplier, Sun* sun);
 
         GLuint useProgram();
 

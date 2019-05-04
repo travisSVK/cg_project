@@ -41,7 +41,7 @@ uniform float nearBlurryPlane;
 uniform float farBlurryPlane;
 uniform int farCoC;
 uniform int nearCoC;
-uniform int focusCoC;
+uniform float focusCoC;
 in float worldZ;
 
 in VS_OUT {
@@ -55,8 +55,8 @@ in VS_OUT {
 ///////////////////////////////////////////////////////////////////////////////
 // Light source
 ///////////////////////////////////////////////////////////////////////////////
-uniform vec3 point_light_color = vec3(1.0, 1.0, 1.0);
-uniform float point_light_intensity_multiplier = 50.0;
+uniform vec3 directional_light_color;
+uniform float directional_light_intensity_multiplier;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constants
@@ -82,7 +82,7 @@ uniform mat4 normalMatrix;
 ///////////////////////////////////////////////////////////////////////////////
 layout(location = 0) out vec4 fragmentColor;
 
-vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color, vec3 lightDir)
+vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 materialColor)
 {
 	///////////////////////////////////////////////////////////////////////////
 	// Task 1.2 - Calculate the radiance Li from the light, and the direction
@@ -90,26 +90,18 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color, vec3 ligh
 	//            return vec3(0); 
 	///////////////////////////////////////////////////////////////////////////
     float d = distance(viewSpacePosition, viewSpaceLightPosition);
-    vec3 li = point_light_intensity_multiplier * point_light_color * 1 / (d * d);
+    //vec3 li = point_light_intensity_multiplier * point_light_color * 1 / (d * d);
+    vec3 li = directional_light_intensity_multiplier * directional_light_color * 1;
 
 	///////////////////////////////////////////////////////////////////////////
 	// Task 1.3 - Calculate the diffuse term and return that as the result
 	///////////////////////////////////////////////////////////////////////////
     vec3 wi = normalize(viewSpaceLightPosition - viewSpacePosition);
-    if (has_texture == 1)
-    {
-        //wi = lightDir;
-    }
     if (dot(n, wi) <= 0) {
         return vec3(0.0);
     }
     
-    vec3 materialColor = material_color;
-    if(has_material_color == 0){
-        materialColor = vec3(1.0f);
-    }
-
-    vec3 diffuse_term = materialColor * texture_color * (1.0 / PI) * abs(dot(n, wi)) * li;
+    vec3 diffuse_term = materialColor * (1.0 / PI) * abs(dot(n, wi)) * li;
 
 	///////////////////////////////////////////////////////////////////////////
 	// Task 2 - Calculate the Torrance Sparrow BRDF and return the light 
@@ -127,14 +119,14 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 texture_color, vec3 ligh
 	// Task 3 - Make your shader respect the parameters of our material model.
 	///////////////////////////////////////////////////////////////////////////
 	vec3 dielectric_term = brdf * (dot(n, wi)) * li + (1 - fresnel) * diffuse_term;
-    vec3 metal_term = brdf * material_color * texture_color * (dot(n, wi)) * li;
+    vec3 metal_term = brdf * materialColor * (dot(n, wi)) * li;
     vec3 microfacet_term = material_metalness * metal_term + (1 - material_metalness) * dielectric_term;
 
     return material_reflectivity * microfacet_term + (1 - material_reflectivity) * diffuse_term;
     //return brdf * dot(n, wi) * li; //vec3(diffuse_term);
 }
 
-vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color, vec3 lightDir)
+vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 materialColor)
 {
 
 	///////////////////////////////////////////////////////////////////////////
@@ -147,12 +139,8 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color, vec3 lig
 	float phi = atan(nws.z, nws.x);
 	if (phi < 0.0f) phi = phi + 2.0f * PI;
     vec2 lookup = vec2(phi / (2.0 * PI), theta / PI);
-    // Dont know if the environment_multiplier
-    vec3 materialColor = material_color;
-    if(has_material_color == 0){
-        materialColor = vec3(1.0f);
-    }
-    vec3 diffuse_term = materialColor * texture_color * (1.0 / PI) * environment_multiplier * texture(irradianceMap, lookup).rgb;
+    
+    vec3 diffuse_term = materialColor * (1.0 / PI) * environment_multiplier * texture(irradianceMap, lookup).rgb;
 
     ///////////////////////////////////////////////////////////////////////////
 	// Task 6 - Look up in the reflection map from the perfect specular 
@@ -176,10 +164,53 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 texture_color, vec3 lig
     float fresnel = material_fresnel + (1 - material_fresnel) * pow((1 - dot(wh, wi)), 5);    
     // float shadowing = min(1, min(2 * ((dot(n, wh) * dot(n, wo)) / dot(wo, wh)), 2 * ((dot(n, wh) * dot(n, wi)) / dot(wo, wh))));
     vec3 dielectric_term = fresnel * li + (1 - fresnel) * diffuse_term;
-    vec3 metal_term = fresnel * material_color * texture_color * li;
+    vec3 metal_term = fresnel * materialColor * li;
 
     vec3 microfacet_term = material_metalness * metal_term + (1 - material_metalness) * dielectric_term;
     return material_reflectivity * microfacet_term + (1 - material_reflectivity) * diffuse_term;
+}
+
+vec3 calculateColorFromTexture()
+{
+    vec3 texture_color = texture(material_texture, texCoord).xyz;
+    // obtain normal from normal map
+    vec3 n = texture(normalMap, fs_in.TexCoords).rgb;
+    // transform normal vector to range [-1,1]
+    n = normalize(n * 2.0 - 1.0);
+
+    vec3 color = texture(material_texture, fs_in.TexCoords).rgb;
+    vec3 ambient = 0.1*color;
+
+    vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
+    float diff = max(dot(lightDir, n), 0.0);
+    vec3 diffuse = diff * color;
+    vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
+    vec3 reflectDir = reflect(-lightDir, n);
+    vec3 halfwayDir = normalize(lightDir + viewDir);  
+    float spec = pow(max(dot(n, halfwayDir), 0.0), 32.0);
+
+    vec3 specular = vec3(0.2) * spec;
+    return ambient + diffuse + specular;
+}
+
+vec3 calculateColor(vec3 wo, vec3 n)
+{
+    vec3 materialColor = (material_color * has_material_color) + (texture(colorMap, texCoord).xyz * (1 - has_material_color));
+	// Direct illumination
+	vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n, materialColor);
+
+	// Indirect illumination
+	vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, materialColor);
+
+	///////////////////////////////////////////////////////////////////////////
+	// Add emissive term. If emissive texture exists, sample this term.
+	///////////////////////////////////////////////////////////////////////////
+	vec3 emission_term = material_emission * material_color;
+	if (has_emission_texture == 1) {
+	    emission_term = texture(emissiveMap, texCoord).xyz;
+	}
+
+    return direct_illumination_term + indirect_illumination_term + emission_term;
 }
 
 float calculateCoCRadius()
@@ -212,62 +243,6 @@ void main()
 {
 	vec3 wo = -normalize(viewSpacePosition);
 	vec3 n = normalize(viewSpaceNormal);
-
-    vec3 texture_color = texture(colorMap, texCoord).xyz;
-    vec3 lightDir = vec3(1.0,1.0,1.0);
-    if (has_texture == 1)
-    {
-        texture_color = texture(material_texture, texCoord).xyz;
-        // obtain normal from normal map
-        n = texture(normalMap, fs_in.TexCoords).rgb;
-        // transform normal vector to range [-1,1]
-        n = normalize(n * 2.0 - 1.0);
-
-        //lightDir = (fs_in.TangentLightPos * normalize(viewSpaceLightPosition - fs_in.FragPos));
-        //wo = -(fs_in.TangentViewPos * normalize(viewSpacePosition - fs_in.FragPos));  
-
-        //n = normalize(normalMatrix * vec4(n, 0.0f)).xyz;
-        //normal = normalize(fs_in.TBN * normal);
-
-        vec3 color = texture(material_texture, fs_in.TexCoords).rgb;
-        vec3 ambient = 0.1*color;
-
-        lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
-        float diff = max(dot(lightDir, n), 0.0);
-        vec3 diffuse = diff * color;
-        vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
-        vec3 reflectDir = reflect(-lightDir, n);
-        vec3 halfwayDir = normalize(lightDir + viewDir);  
-        float spec = pow(max(dot(n, halfwayDir), 0.0), 32.0);
-
-        vec3 specular = vec3(0.2) * spec;
-
-        fragmentColor = vec4(ambient + diffuse + specular, 1.0);
-    }
-    else
-    {
-
-	    // Direct illumination
-	    vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n, texture_color, lightDir);
-
-	    // Indirect illumination
-	    vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, texture_color, lightDir);
-
-	    ///////////////////////////////////////////////////////////////////////////
-	    // Add emissive term. If emissive texture exists, sample this term.
-	    ///////////////////////////////////////////////////////////////////////////
-	    vec3 emission_term = material_emission * material_color * texture_color;
-	    if (has_emission_texture == 1) {
-		    emission_term = texture(emissiveMap, texCoord).xyz;
-	    }
-
-	    fragmentColor.xyz =
-		    direct_illumination_term +
-		    indirect_illumination_term +
-		    emission_term;
-
-        //normal = texture(normalMap, fs_in.texCoord).rgb;
-
-        fragmentColor = vec4(fragmentColor.xyz, calculateCoCRadius());
-    }
+    
+    fragmentColor = vec4((calculateColorFromTexture() * has_texture) + (calculateColor(wo, n) * (1 - has_texture)), calculateCoCRadius());
 }

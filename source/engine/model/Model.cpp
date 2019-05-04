@@ -830,8 +830,8 @@ namespace engine
 				glUniform1i(glGetUniformLocation(current_program, "has_shininess_texture"), has_shininess_texture);
 				glUniform1i(glGetUniformLocation(current_program, "has_emission_texture"), has_emission_texture);
 				glUniform3fv(glGetUniformLocation(current_program, "material_color"), 1, &material.m_color.x);
+                glUniform1i(glGetUniformLocation(current_program, "has_material_color"), 1);
                 glUniform3fv(glGetUniformLocation(current_program, "material_diffuse_color"), 1, &material.m_color.x);
-
                 // @todo Stupid hack!
                 if (material.m_color_texture.valid)
                 {

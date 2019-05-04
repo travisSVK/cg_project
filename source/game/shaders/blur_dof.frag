@@ -52,7 +52,7 @@ void main()
     
     int maxCoCRadius = 4; // max possible value is 4 TODO take as input from cpu
     // Map radius of this pixel - radius << 0 to 0, radius >> 0 to 1
-    float smallestRadius = 1.0f / (70.0f - 10.0f) * maxCoCRadius; // for now hardcoded as 1 / nearMax - nearMin * maxCoCRadius TODO take as input from cpu
+    float smallestRadius = 1.0f / (70.0f - 10.0f) * maxCoCRadius; // for now hardcoded as 4 / nearMax - nearMin * maxCoCRadius TODO take as input from cpu
     float multiple = 1.0f / smallestRadius;
     float nearFieldnessThis = clamp(cocRadius * multiple, 0, 1);
 
@@ -120,11 +120,4 @@ void main()
     // Normalize the blur
     focusFarResult.rgb /= blurWeightSum;
     nearResult /= max(nearWeightSum, 0.00001);
-//    if(cocRadius == 0.0f)
-//    {
-//        nearResult = vec4(0.0f);
-//    }else
-//    {
-//        nearResult = vec4(1.0f);
-//    }
 }

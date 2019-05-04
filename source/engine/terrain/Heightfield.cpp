@@ -7,6 +7,7 @@
 #include <glm/gtx/transform.hpp>
 #include <stb_image.h>
 #include "../Helper.h"
+#include "../scene/Sun.h"
 
 namespace engine
 {
@@ -103,7 +104,7 @@ namespace engine
         float rowPosition = -1.0f;
         for (float columnPos = -1.0f; columnPos <= 1.0f; columnPos += offset)
         {
-            positions.push_back(glm::vec3(columnPos, 1.0f, rowPosition));
+            positions.push_back(glm::vec3(columnPos, 10.0f, rowPosition));
             textureCoordinates.push_back(glm::vec2((columnPos + 1.0f) / 2.0f, (rowPosition + 1.0f) / 2.0f));
             if ((columnPos == 1.0f) && (rowPosition != 1.0f))
             {
@@ -122,9 +123,6 @@ namespace engine
         glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2 * textureCoordinates.size(), &textureCoordinates[0], GL_STATIC_DRAW);
         glVertexAttribPointer(2, 2, GL_FLOAT, false/*normalized*/, 0/*stride*/, 0/*offset*/);
         glEnableVertexAttribArray(2);
-
-        // generate normals
-
 
         // create indices
         for (int i = 0; i < numVertices - columnCount - 1; i++) // skip last row
@@ -151,20 +149,21 @@ namespace engine
         glPatchParameteri(GL_PATCH_VERTICES, 3);
     }
 
-    void HeightField::submitTriangles(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraWorldPos, float environmentMultiplier)
+    void HeightField::render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraWorldPos, float environmentMultiplier, Sun* sun)
     {
         if (m_vao == UINT32_MAX) {
             std::cout << "No vertex array is generated, cannot draw anything.\n";
             return;
         }
-        glm::mat4 modelMatrix = glm::scale(glm::vec3(40.f, 10.0f, 40.f));
+        glm::mat4 modelMatrix = glm::scale(glm::vec3(100.f, 1.0f, 100.f));
         // TODO use light source (sun)
-        engine::setUniformSlow(m_shader, "point_light_color", glm::vec3(1.0f));
-        engine::setUniformSlow(m_shader, "point_light_intensity_multiplier", 1000.0f);
-        engine::setUniformSlow(m_shader, "viewSpaceLightPosition", glm::vec3(viewMatrix * glm::vec4(20.0f, 80.0f, -50.0f, 1.0f)));
+        engine::setUniformSlow(m_shader, "directional_light_color", sun->getColor());
+        engine::setUniformSlow(m_shader, "directional_light_intensity_multiplier", sun->getIntensityMultiplier());
+        glm::mat4 newViewMatrix = viewMatrix;
+        newViewMatrix[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        engine::setUniformSlow(m_shader, "viewSpaceLightPosition", glm::vec3(newViewMatrix * glm::vec4(sun->getPosition(), 1.0f)));
         engine::setUniformSlow(m_shader, "environment_multiplier", environmentMultiplier);
         engine::setUniformSlow(m_shader, "viewInverse", inverse(viewMatrix));
-        engine::setUniformSlow(m_shader, "has_material_color", 0);
         
         engine::setUniformSlow(m_shader, "modelMatrix", modelMatrix);
         engine::setUniformSlow(m_shader, "viewMatrix", viewMatrix);

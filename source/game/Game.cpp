@@ -53,7 +53,7 @@ void Game::initialize()
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
     m_useLensFlare = false;
     m_heightfield.generateMesh(8);
-    m_heightfield.loadHeightField("../scenes/nlsFinland/L3123F.png");
+    m_heightfield.loadHeightField("../scenes/nlsFinland/terrainHeightmap.png");
     m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/L3123F_downscaled.jpg");
     initGL();
 }
@@ -137,7 +137,7 @@ bool Game::handleEvents()
 
 void Game::render()
 {
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), float(m_width) / float(m_height), 0.01f, 1000.0f);
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), float(m_width) / float(m_height), 3.0f, 1000.0f);
     glm::mat4 viewMatrix = glm::lookAt(
         m_scene->getCamera()->getPosition(), 
         m_scene->getCamera()->getPosition() + m_scene->getCamera()->getDirection(), 
@@ -153,8 +153,8 @@ void Game::render()
     m_environmentManager->renderEnvironment(projectionMatrix, viewMatrix, m_scene->getCamera()->getPosition());
     
     // render terrain
-    m_heightfield.useProgram();
-    m_heightfield.submitTriangles(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier());
+    m_postfxManager->setShaderValues(m_currentEffect, m_heightfield.useProgram());
+    m_heightfield.render(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier(), m_scene->getSun());
 
     // render scene
     glUseProgram(m_scene->getSceneProgram());
@@ -167,7 +167,7 @@ void Game::render()
     if (m_useLensFlare)
     {
         // TODO pass suns position
-        // m_flareManager->render(viewMatrix, projectionMatrix, );
+        m_flareManager->render(viewMatrix, projectionMatrix, m_scene->getSunPosition());
     }
 
     CHECK_GL_ERROR();

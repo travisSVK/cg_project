@@ -52,13 +52,13 @@ void main()
     float s21 = textureOffset(heightMap, texCoord, off.zy).x;
     float s10 = textureOffset(heightMap, texCoord, off.yx).x;
     float s12 = textureOffset(heightMap, texCoord, off.yz).x;
-    vec3 va = normalize(vec3(size.xy,s21-s01));
-    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    vec3 va = normalize(vec3(size.x, s21-s01, size.y));
+    vec3 vb = normalize(vec3(size.y, s12-s10, -size.x));
     vec4 bump = vec4( cross(va,vb), s11 );
 
    	//gl_Position = viewProjectionMatrix * vec4(pos_fs.x, pos_fs.y * texture(heightMap, texCoord_fs).x, pos_fs.z, 1.0);
     gl_Position = viewProjectionMatrix * vec4(position.x, position.y * bump.a, position.z, 1.0);
-    viewSpaceNormal = (normalMatrix * vec4(bump.xyz, 1.0)).xyz;
+    viewSpaceNormal = (normalMatrix * vec4(bump.xyz, 0.0)).xyz;
     viewSpacePosition = (viewMatrix * vec4(position.x, position.y * bump.a, position.z, 1.0)).xyz;
     worldZ = position.z;
 

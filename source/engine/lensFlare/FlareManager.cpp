@@ -16,7 +16,9 @@ namespace engine
 
 void FlareManager::render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& lightPosition)
 {
-    glm::vec2 lightCoords = convertToScreenSpace(lightPosition, viewMatrix, projectionMatrix);
+    glm::mat4 newViewMatrix = viewMatrix;
+    newViewMatrix[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // lets keep the sun at the same spot and without bilboard rotation
+    glm::vec2 lightCoords = convertToScreenSpace(lightPosition, newViewMatrix, projectionMatrix);
     // check if light is inside the screen
     if (lightCoords.x > 1.0f || lightCoords.x < 0.0f || lightCoords.y > 1.0f || lightCoords.y < 0.0f)
     {
@@ -24,7 +26,7 @@ void FlareManager::render(const glm::mat4& viewMatrix, const glm::mat4& projecti
     }
     // subtract coords from center of the screen to get the vector
     glm::vec2 lightToCenter = glm::vec2(0.5f, 0.5f) - lightCoords;
-    float brightness = 1 - (glm::length(lightToCenter) / 0.7f);
+    float brightness = (1 - (glm::length(lightToCenter) / 0.7f)) / 2.0f;
     if (brightness > 0) {
         calcFlarePositions(lightToCenter, lightCoords);
         m_flareRenderer->render(m_textures, brightness, m_screenWidth, m_screenHeight);

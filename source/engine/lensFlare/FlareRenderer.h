@@ -13,7 +13,7 @@ namespace engine
         void destroy();
 
     private:
-        void renderFlare(const engine::Texture& flareTexture, int screenWidth, int screenHeight);
+        void renderFlare(const engine::Texture& flareTexture, int screenWidth, int screenHeight, float brightness);
         void prepare(float brightness);
 
     private:

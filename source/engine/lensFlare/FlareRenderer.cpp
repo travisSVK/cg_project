@@ -28,18 +28,18 @@ namespace engine
         prepare(brightness);
         for (const auto &flare : flareTextures)
         {
-            renderFlare(flare, screenWidth, screenHeight);
+            renderFlare(flare, screenWidth, screenHeight, brightness);
         }
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
     }
 
-    void FlareRenderer::renderFlare(const engine::Texture& flareTexture, int screenWidth, int screenHeight)
+    void FlareRenderer::renderFlare(const engine::Texture& flareTexture, int screenWidth, int screenHeight, float brightness)
     {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, flareTexture.gl_id);
-        float xScale = flareTexture.scale;
+        float xScale = flareTexture.scale / (brightness + 1.5f);
         float yScale = xScale * (float)(screenWidth / screenHeight);
         glm::vec2 centerPos = flareTexture.screenPosition;
         engine::setUniformSlow(m_flareshader, "transform", glm::vec4(centerPos.x, centerPos.y, xScale, yScale));
