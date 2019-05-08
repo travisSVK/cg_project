@@ -2,6 +2,7 @@
 #include "postfx/PostFxManager.h"
 #include <SDL_video.h>
 #include "terrain/Heightfield.h"
+#include "gameobjects/QuestManager.h"
 
 namespace engine 
 {
@@ -12,6 +13,7 @@ namespace engine
     class FboInfo;
 }
 
+class GameCamera;
 class Game
 {
 public:
@@ -25,14 +27,18 @@ private:
     void initGL();
     bool handleEvents();
     void gui();
+    void renderToGameCamera(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);
 
 private:
+    bool m_gameCameraActive;
     engine::ModelManager* m_modelManager;
     engine::FlareManager* m_flareManager;
     engine::EnvironmentManager* m_environmentManager;
     engine::PostFxManager* m_postfxManager;
     engine::FboInfo* m_mainFrameBuffer;
     engine::Scene* m_scene;
+    GameCamera* m_gameCamera;
+    QuestManager m_questManager;
     SDL_Window* m_window;
     int m_width;
     int m_height;

@@ -125,37 +125,37 @@ vec3 motionBlur(vec2 coord)
     vec2 texCoord = coord / textureSize(depthBufferTexture, 0);
     float zOverW = texture(depthBufferTexture, texCoord).x;
     // H is the viewport position at this pixel in the range -1 to 1.
-    vec4 currentPos = vec4(vec2((texCoord * 2.0) - 1.0), zOverW, 1.0);
+    vec4 currentPos = vec4(vec2((texCoord.x * 2.0) - 1.0, (1.0 - texCoord.y) * 2.0 - 1.0), zOverW, 1.0);
     // Transform by the view-projection inverse.
-    vec4 D = currentPos * viewProjectionInverseMatrix;
+    vec4 D =  viewProjectionInverseMatrix * currentPos;
     // Divide by w to get the world position.
     vec4 worldPos = D / D.w;
     // Use the world position, and transform by the previous view-projection matrix.
-    vec4 previousPos = worldPos * previousViewProjectionMatrix;
+    vec4 previousPos = previousViewProjectionMatrix * worldPos;
     previousPos /= previousPos.w;
     // get previous screen space position:
-    previousPos.xy = previousPos.xy * 0.5 + 0.5;
+    //previousPos.xy = previousPos.xy * 0.5 + 0.5;
 
     // Use this frame's position and last frame's to compute the pixel velocity.
-    //vec2 velocity = (currentPos - previousPos).xy/2.0;
-    vec2 velocity = previousPos.xy - texCoord;
+    vec2 velocity = (currentPos - previousPos).xy/2.0;
+    //vec2 velocity = previousPos.xy - texCoord;
     vec3 color = texture(frameBufferTexture, texCoord).xyz;
 
     //test
     //color = texture(frameBufferTexture, vec2((previousPos.x + 1.0) / 2.0, (previousPos.y + 1.0) / 2.0)).xyz;
-    //texCoord += velocity;
-    for(int i = 1; i < numSamples; ++i)
+    texCoord += velocity;
+    for(int i = 1; i < numSamples; ++i, texCoord += velocity)
     {
         // get offset in range [-0.5, 0.5]:
-        vec2 offset = velocity * (float(i) / float(numSamples - 1) - 0.5);
+        //vec2 offset = velocity * (float(i) / float(numSamples - 1) - 0.5);
   
         // sample & add to result:
-        color += texture(frameBufferTexture, texCoord + offset).xyz;
+        //color += texture(frameBufferTexture, texCoord + offset).xyz;
 
         // Sample the color buffer along the velocity vector.
-//        vec3 currentColor = texture(frameBufferTexture, texCoord).xyz;
+        vec3 currentColor = texture(frameBufferTexture, texCoord).xyz;
 //        // Add the current color to our color sum.
-//        color += currentColor;
+        color += currentColor;
     }
     return color / float(numSamples);
     //return color;

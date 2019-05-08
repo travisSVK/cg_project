@@ -29,7 +29,8 @@ namespace engine
         };
 
         PostFxManager(int width, int height);
-        void renderPostFx(PostFxTypes type, engine::FboInfo* source, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
+        void renderPostFx(PostFxTypes type, engine::FboInfo* source, engine::FboInfo* to, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
+        //void renderPostFx(PostFxTypes type, engine::FboInfo* source, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
         void setShaderValues(PostFxTypes type, GLuint program);
         void destroy();
 

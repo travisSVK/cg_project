@@ -2,5 +2,6 @@
 
 enum class GameModels: unsigned int
 {
-    FighterModel = 0
+    FighterModel = 0,
+    CameraModel = 1
 };

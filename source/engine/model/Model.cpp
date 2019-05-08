@@ -830,7 +830,6 @@ namespace engine
 				glUniform1i(glGetUniformLocation(current_program, "has_shininess_texture"), has_shininess_texture);
 				glUniform1i(glGetUniformLocation(current_program, "has_emission_texture"), has_emission_texture);
 				glUniform3fv(glGetUniformLocation(current_program, "material_color"), 1, &material.m_color.x);
-                glUniform1i(glGetUniformLocation(current_program, "has_material_color"), 1);
                 glUniform3fv(glGetUniformLocation(current_program, "material_diffuse_color"), 1, &material.m_color.x);
                 // @todo Stupid hack!
                 if (material.m_color_texture.valid)
@@ -842,9 +841,11 @@ namespace engine
 				    glUniform1i(glGetUniformLocation(current_program, "material_texture"), 10); //FIXME: Compatibility with old shading model of lab3.
                     glUniform1i(glGetUniformLocation(current_program, "normalMap"), 11);
 				    glUniform1i(glGetUniformLocation(current_program, "has_texture"), 1); //FIXME: Compatibility with old shading model of lab3.
+                    glUniform1i(glGetUniformLocation(current_program, "has_material_color"), 0);
                 }
                 else 
                 {
+                    glUniform1i(glGetUniformLocation(current_program, "has_material_color"), 1);
                     glUniform1i(glGetUniformLocation(current_program, "has_texture"), 0); //FIXME: Compatibility with old shading model of lab3.
                 }
 				glUniform3fv(glGetUniformLocation(current_program, "material_diffuse_color"), 1, &material.m_color.x); //FIXME: Compatibility with old shading model of lab3.
@@ -859,4 +860,78 @@ namespace engine
 			glDrawArrays(GL_TRIANGLES, mesh.m_start_index, (GLsizei)mesh.m_number_of_vertices);
 		}
 	}
+
+    void renderWithDiffOptionForMesh(const Model * model, const std::string& meshName, const std::function<void()>& setFunction, const std::function<void()>& resetFunction, const bool submitMaterials)
+    {
+        glBindVertexArray(model->m_vaob);
+        for (auto & mesh : model->m_meshes)
+        {
+            bool setCalled = false;
+            if (submitMaterials) {
+
+                const Material & material = model->m_materials[mesh.m_material_idx];
+
+                if (material.m_name.compare(meshName) == 0)
+                {
+                    setCalled = true;
+                    setFunction();
+                }
+
+                bool has_color_texture = material.m_color_texture.valid;
+                bool has_reflectivity_texture = material.m_reflectivity_texture.valid;
+                bool has_metalness_texture = material.m_metalness_texture.valid;
+                bool has_fresnel_texture = material.m_fresnel_texture.valid;
+                bool has_shininess_texture = material.m_shininess_texture.valid;
+                bool has_emission_texture = material.m_emission_texture.valid;
+                bool has_normalMap = material.normalMap.valid;
+                if (has_color_texture) glBindTextures(0, 1, &material.m_color_texture.gl_id);
+                if (has_reflectivity_texture) glBindTextures(1, 1, &material.m_reflectivity_texture.gl_id);
+                if (has_metalness_texture) glBindTextures(2, 1, &material.m_metalness_texture.gl_id);
+                if (has_fresnel_texture) glBindTextures(3, 1, &material.m_fresnel_texture.gl_id);
+                if (has_shininess_texture) glBindTextures(4, 1, &material.m_shininess_texture.gl_id);
+                if (has_emission_texture) glBindTextures(5, 1, &material.m_emission_texture.gl_id);
+                GLint current_program = 0;
+                glGetIntegerv(GL_CURRENT_PROGRAM, &current_program);
+                glUniform1i(glGetUniformLocation(current_program, "has_color_texture"), has_color_texture);
+                glUniform1i(glGetUniformLocation(current_program, "has_diffuse_texture"), has_color_texture ? 1 : 0); // FIXME
+                glUniform1i(glGetUniformLocation(current_program, "has_reflectivity_texture"), has_reflectivity_texture);
+                glUniform1i(glGetUniformLocation(current_program, "has_metalness_texture"), has_metalness_texture);
+                glUniform1i(glGetUniformLocation(current_program, "has_fresnel_texture"), has_fresnel_texture);
+                glUniform1i(glGetUniformLocation(current_program, "has_shininess_texture"), has_shininess_texture);
+                glUniform1i(glGetUniformLocation(current_program, "has_emission_texture"), has_emission_texture);
+                glUniform3fv(glGetUniformLocation(current_program, "material_color"), 1, &material.m_color.x);
+                glUniform3fv(glGetUniformLocation(current_program, "material_diffuse_color"), 1, &material.m_color.x);
+                // @todo Stupid hack!
+                if (material.m_color_texture.valid)
+                {
+                    glActiveTexture(GL_TEXTURE10);
+                    glBindTexture(GL_TEXTURE_2D, material.m_color_texture.gl_id);
+                    glActiveTexture(GL_TEXTURE11);
+                    glBindTexture(GL_TEXTURE_2D, material.normalMap.gl_id);
+                    glUniform1i(glGetUniformLocation(current_program, "material_texture"), 10); //FIXME: Compatibility with old shading model of lab3.
+                    glUniform1i(glGetUniformLocation(current_program, "normalMap"), 11);
+                    glUniform1i(glGetUniformLocation(current_program, "has_texture"), 1); //FIXME: Compatibility with old shading model of lab3.
+                    glUniform1i(glGetUniformLocation(current_program, "has_material_color"), 0);
+                }
+                else
+                {
+                    glUniform1i(glGetUniformLocation(current_program, "has_material_color"), 1);
+                    glUniform1i(glGetUniformLocation(current_program, "has_texture"), 0); //FIXME: Compatibility with old shading model of lab3.
+                }
+                glUniform3fv(glGetUniformLocation(current_program, "material_diffuse_color"), 1, &material.m_color.x); //FIXME: Compatibility with old shading model of lab3.
+                glUniform3fv(glGetUniformLocation(current_program, "material_emissive_color"), 1, &material.m_color.x); //FIXME: Compatibility with old shading model of lab3.
+                glUniform1i(glGetUniformLocation(current_program, "has_diffuse_texture"), has_color_texture);//FIXME: Compatibility with old shading model of lab3.
+                glUniform1fv(glGetUniformLocation(current_program, "material_reflectivity"), 1, &material.m_reflectivity);
+                glUniform1fv(glGetUniformLocation(current_program, "material_metalness"), 1, &material.m_metalness);
+                glUniform1fv(glGetUniformLocation(current_program, "material_fresnel"), 1, &material.m_fresnel);
+                glUniform1fv(glGetUniformLocation(current_program, "material_shininess"), 1, &material.m_shininess);
+                glUniform1fv(glGetUniformLocation(current_program, "material_emission"), 1, &material.m_emission);
+            }
+            glDrawArrays(GL_TRIANGLES, mesh.m_start_index, (GLsizei)mesh.m_number_of_vertices);
+            if (setCalled)
+            {
+                resetFunction();
+            }
+        }
+    }
 }

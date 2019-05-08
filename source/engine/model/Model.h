@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
+#include <functional>
 
 namespace engine
 {	
@@ -100,16 +101,17 @@ namespace engine
 		// Vertex Array Object
 		uint32_t m_vaob;
         bool m_loaded;
+        bool m_enabled;
         glm::mat4 m_modelMatrix;
     public:
         glm::mat4 getModelMatrix();
-
 	};
 
 	Model * loadModelFromOBJ(std::string filename);
 	void saveModelToOBJ(Model * model, std::string filename);
 	void freeModel(Model * model);
 	void render(const Model * model, const bool submitMaterials = true); 
+    void renderWithDiffOptionForMesh(const Model * model, const std::string& meshName, const std::function<void()>& setFunction, const std::function<void()>& resetFunction, const bool submitMaterials = true);
     void saveModelBinary(Model * model, std::string filename);
     Model * loadModelBinary(std::string filename);
 }

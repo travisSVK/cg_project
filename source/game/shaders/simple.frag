@@ -32,6 +32,11 @@ layout(binding = 8) uniform sampler2D reflectionMap;
 uniform float environment_multiplier;
 
 ///////////////////////////////////////////////////////////////////////////////
+// Game camera model
+///////////////////////////////////////////////////////////////////////////////
+uniform int is_camera_model;
+
+///////////////////////////////////////////////////////////////////////////////
 // DoF values
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -207,7 +212,8 @@ vec3 calculateColor(vec3 wo, vec3 n)
 	///////////////////////////////////////////////////////////////////////////
 	vec3 emission_term = material_emission * material_color;
 	if (has_emission_texture == 1) {
-	    emission_term = texture(emissiveMap, texCoord).xyz;
+        vec2 newTexCoord = vec2((is_camera_model * (1.0 - texCoord.x)) + ((1 - is_camera_model) * texCoord.x), texCoord.y);
+	    emission_term = texture(emissiveMap, newTexCoord).xyz;
 	}
 
     return direct_illumination_term + indirect_illumination_term + emission_term;

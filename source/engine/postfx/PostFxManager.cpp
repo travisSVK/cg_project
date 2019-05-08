@@ -31,7 +31,8 @@ namespace engine
         m_effects[PostFxTypes::Separable_blur] = separableBlur;
     }
 
-    void PostFxManager::renderPostFx(PostFxTypes type, engine::FboInfo* source, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
+    void PostFxManager::renderPostFx(PostFxTypes type, engine::FboInfo* source, engine::FboInfo* to, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
+    //void PostFxManager::renderPostFx(PostFxTypes type, engine::FboInfo* source, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
     {
         if (m_effects.find(type) != m_effects.end())
         {
@@ -44,7 +45,7 @@ namespace engine
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, source->getColorTextureTarget(0));
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, to->getFrameBufferId());
         glUseProgram(m_postfxProgram);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, source->getDepthBuffer());
@@ -53,7 +54,7 @@ namespace engine
         //engine::setUniformSlow(m_postfxProgram, "filterSize", filterSizes[filterSize - 1]); // TODO add filter size for blur
         engine::setUniformSlow(m_postfxProgram, "viewProjectionInverseMatrix", inverse(projectionMatrix * viewMatrix));
         engine::setUniformSlow(m_postfxProgram, "previousViewProjectionMatrix", m_previousViewProjectionMat);
-        engine::setUniformSlow(m_postfxProgram, "numSamples", 3);
+        engine::setUniformSlow(m_postfxProgram, "numSamples", 5);
         engine::setUniformSlow(m_postfxProgram, "maxCocRadius", 4);
         engine::drawFullScreenQuad();
         m_previousViewProjectionMat = projectionMatrix * viewMatrix;

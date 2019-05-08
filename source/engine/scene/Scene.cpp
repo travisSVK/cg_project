@@ -30,7 +30,7 @@ namespace engine
         m_models.push_back(model);
     }
 
-    void Scene::render(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, float environmentMultiplier)
+    void Scene::renderScene(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, float environmentMultiplier)
     {
         engine::setUniformSlow(m_sceneProgram, "directional_light_color", m_sun->getColor());
         engine::setUniformSlow(m_sceneProgram, "directional_light_intensity_multiplier", m_sun->getIntensityMultiplier());
@@ -47,6 +47,10 @@ namespace engine
             engine::setUniformSlow(m_sceneProgram, "modelMatrix", model->getModelMatrix());
             engine::render(model);
         }
+    }
+
+    void Scene::renderSun(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
+    {
         glm::vec3 view = glm::normalize(m_sun->getPosition() - m_camera->getPosition());
         glm::vec3 cameraRight = glm::cross(view, m_camera->getWorldUp());
         glm::vec3 towards = glm::cross(m_camera->getWorldUp(), cameraRight);

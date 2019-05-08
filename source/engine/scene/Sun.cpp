@@ -14,10 +14,10 @@ namespace engine
         m_position = glm::vec3(-65.0f, 115.0f, -500.0f);
         const float positions[] = {
             // X Y Z
-            -100.0f, -100.0f, 0.0f,    // v0
-            -100.0f, 100.0f, 0.0f,   // v1
-            100.0f, 100.0f, 0.0f,   // v2
-            100.0f, -100.0f, 0.0f     // v3
+            -80.0f, -80.0f, 0.0f,    // v0
+            -80.0f, 80.0f, 0.0f,   // v1
+            80.0f, 80.0f, 0.0f,   // v2
+            80.0f, -80.0f, 0.0f     // v3
         };
 
         glGenBuffers(1, &m_positionsVbo);
