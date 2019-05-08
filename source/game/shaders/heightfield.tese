@@ -57,7 +57,7 @@ void main()
     vec4 bump = vec4( cross(va,vb), s11 );
 
    	//gl_Position = viewProjectionMatrix * vec4(pos_fs.x, pos_fs.y * texture(heightMap, texCoord_fs).x, pos_fs.z, 1.0);
-    gl_Position = viewProjectionMatrix * vec4(position.x, position.y * bump.a, position.z, 1.0);
+    gl_Position = viewProjectionMatrix * vec4(position.x, ((position.y * bump.a) - 1.0) * 10, position.z, 1.0);
     viewSpaceNormal = (normalMatrix * vec4(bump.xyz, 0.0)).xyz;
     viewSpacePosition = (viewMatrix * vec4(position.x, position.y * bump.a, position.z, 1.0)).xyz;
     worldZ = position.z;

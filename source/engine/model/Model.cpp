@@ -257,6 +257,7 @@ namespace engine
                     // Process a new Mesh with a unique material
                     Mesh mesh;
                     mesh.m_name = shape.name + "_" + materials[current_material_index].name;
+                    //std::cout << mesh.m_name << std::endl;
                     mesh.m_material_idx = current_material_index;
                     mesh.m_start_index = vertices_so_far;
                     number_of_materials_in_shape += 1;
@@ -308,6 +309,13 @@ namespace engine
                     // Finalize and push this mesh to the list
                     ///////////////////////////////////////////////////////////////
                     mesh.m_number_of_vertices = vertices_so_far - mesh.m_start_index;
+                    /*if (mesh.m_name.compare("CameraScreen_Cube.001_None") == 0)
+                    {
+                        std::cout << "got it boss" << std::endl;
+                        Model* cameraScreen = nullptr;
+                        cameraScreen->m_meshes.push_back(mesh);
+
+                    }*/
                     model->m_meshes.push_back(mesh);
                     finished_materials[current_material_index] = true;
                 }

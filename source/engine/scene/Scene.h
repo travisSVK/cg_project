@@ -16,6 +16,7 @@ namespace engine
         void renderScene(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, float environmentMultiplier);
         void renderSun(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
         void addModel(Model* model);
+        void addModel(Model* model, const glm::mat4& modelMatrix);
         Camera* getCamera();
         glm::vec3 getSunPosition();
         GLuint getSceneProgram();

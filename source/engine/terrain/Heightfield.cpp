@@ -78,6 +78,11 @@ namespace engine
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); // plain RGB
         glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
 
         std::cout << "Successfully loaded diffuse texture: " << diffusePath << ".\n";
     }
@@ -155,7 +160,7 @@ namespace engine
             std::cout << "No vertex array is generated, cannot draw anything.\n";
             return;
         }
-        glm::mat4 modelMatrix = glm::scale(glm::vec3(100.f, 1.0f, 100.f));
+        glm::mat4 modelMatrix = glm::scale(glm::vec3(200.f, 1.0f, 200.f));
         // TODO use light source (sun)
         engine::setUniformSlow(m_shader, "directional_light_color", sun->getColor());
         engine::setUniformSlow(m_shader, "directional_light_intensity_multiplier", sun->getIntensityMultiplier());

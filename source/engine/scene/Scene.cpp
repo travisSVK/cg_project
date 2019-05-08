@@ -30,6 +30,12 @@ namespace engine
         m_models.push_back(model);
     }
 
+    void Scene::addModel(Model* model, const glm::mat4& modelMatrix)
+    {
+        model->m_modelMatrix = modelMatrix;
+        m_models.push_back(model);
+    }
+
     void Scene::renderScene(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, float environmentMultiplier)
     {
         engine::setUniformSlow(m_sceneProgram, "directional_light_color", m_sun->getColor());

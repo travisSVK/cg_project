@@ -18,7 +18,7 @@
 #include "scene/Scene.h"
 #include "scene/Camera.h"
 #include "Helper.h"
-
+#include "model/Model.h"
 // game spacific includes
 #include "scene/GameCamera.h"
 #include "Enums.h"
@@ -55,15 +55,50 @@ void Game::initialize()
     modelMatrix = glm::translate(glm::vec3(-70.0f, 5.0f, 70.0f));
     m_modelManager->createModel("../scenes/photocameraRotated.obj", static_cast<unsigned int>(GameModels::CameraModel), modelMatrix);
 
-    //setup terrain
-    m_heightfield.generateMesh(8);
-    m_heightfield.loadHeightField("../scenes/nlsFinland/terrainHeightmap.png");
-    m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/L3123F_downscaled.jpg");
+    m_modelManager->createModel("../scenes/treeDecimated.obj", static_cast<unsigned int>(GameModels::TreeModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(40.0, 10.0, 40.0));
+    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
+    modelMatrix = glm::translate(glm::vec3(45.0, 10.0, 35.0));
+    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(30.0, 10.0, 20.0));
+    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(25.0, 10.0, 20.0));
+    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(30.0, 10.0, 15.0));
+    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(25.0, 10.0, 25.0));
+    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(60.0, 10.0, 0.0));
+    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(40.0, 10.0, 35.0));
+    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    //setup terrain
+    m_heightfield.generateMesh(256);
+    m_heightfield.loadHeightField("../scenes/nlsFinland/terrainHeightmap.png");
+    m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/testText.jpg");
+
     // setup quests
     m_questManager.addQuest("Take a photo of this another nice tree.", glm::vec3(0.0f), glm::vec3(0.0f), static_cast<int>(engine::PostFxManager::PostFxTypes::None));
     m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 5.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 5.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None));
-    
+
     // setup game variables
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
     m_useLensFlare = false;
