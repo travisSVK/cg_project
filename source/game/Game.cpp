@@ -176,46 +176,11 @@ void Game::render()
         m_scene->getCamera()->getPosition() + m_scene->getCamera()->getDirection(), 
         m_scene->getCamera()->getWorldUp());
 
-    if (m_gameCameraActive)
+    /*if (m_gameCameraActive)
     {
         renderToGameCamera(viewMatrix, projectionMatrix);
-    }
+    }*/
     // render environment
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, m_width, m_height);
-    glClearColor(0.2, 0.2, 0.8, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(m_environmentManager->getEnvironmentProgram());
-    //m_postfxManager->setShaderValues(m_currentEffect, m_environmentManager->getEnvironmentProgram());
-    m_environmentManager->renderEnvironment(projectionMatrix, viewMatrix, m_scene->getCamera()->getPosition());
-    
-    // render terrain
-    //m_postfxManager->setShaderValues(m_currentEffect, m_heightfield.useProgram());
-    m_heightfield.useProgram();
-    m_heightfield.render(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier(), m_scene->getSun());
-
-    // render scene
-    glUseProgram(m_scene->getSceneProgram());
-    //m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
-    m_scene->renderScene(projectionMatrix, viewMatrix, m_environmentManager->getEnvironmentMultiplier());
-
-    if (m_gameCameraActive)
-    {
-        m_gameCamera->renderGameCamera(m_scene->getSceneProgram(), viewMatrix, projectionMatrix);
-    }
-    
-    // render post fx
-    //m_postfxManager->renderPostFx(m_currentEffect, m_mainFrameBuffer, projectionMatrix, viewMatrix);
-
-    CHECK_GL_ERROR();
-
-    gui();
-    SDL_GL_SwapWindow(m_window);
-}
-
-void Game::renderToGameCamera(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
-{
-    //m_gameCamera->activateGameCameraFB();
     glBindFramebuffer(GL_FRAMEBUFFER, m_mainFrameBuffer->getFrameBufferId());
     glViewport(0, 0, m_width, m_height);
     glClearColor(0.2, 0.2, 0.8, 1.0);
@@ -223,23 +188,30 @@ void Game::renderToGameCamera(const glm::mat4& viewMatrix, const glm::mat4& proj
     glUseProgram(m_environmentManager->getEnvironmentProgram());
     m_postfxManager->setShaderValues(m_currentEffect, m_environmentManager->getEnvironmentProgram());
     m_environmentManager->renderEnvironment(projectionMatrix, viewMatrix, m_scene->getCamera()->getPosition());
-
+    
     // render terrain
     m_postfxManager->setShaderValues(m_currentEffect, m_heightfield.useProgram());
+    m_heightfield.useProgram();
     m_heightfield.render(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier(), m_scene->getSun());
 
     // render scene
     glUseProgram(m_scene->getSceneProgram());
     m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
     m_scene->renderScene(projectionMatrix, viewMatrix, m_environmentManager->getEnvironmentMultiplier());
-
-    // render post fx
-    m_postfxManager->renderPostFx(m_currentEffect, m_mainFrameBuffer, m_gameCamera->getGameCameraFB(), projectionMatrix, viewMatrix);
-
-    if (m_useLensFlare)
+    
+    if (m_gameCameraActive)
     {
-        m_flareManager->render(viewMatrix, projectionMatrix, m_scene->getSunPosition());
+        m_postfxManager->renderPostFx(m_currentEffect, m_mainFrameBuffer, m_gameCamera->getGameCameraFB(), projectionMatrix, viewMatrix);
+        glUseProgram(m_scene->getSceneProgram());
+        m_gameCamera->renderGameCamera(m_scene->getSceneProgram(), viewMatrix, projectionMatrix);
     }
+
+    m_postfxManager->renderPostFxToMain(engine::PostFxManager::PostFxTypes::None, m_mainFrameBuffer, projectionMatrix, viewMatrix);
+
+    CHECK_GL_ERROR();
+
+    gui();
+    SDL_GL_SwapWindow(m_window);
 }
 
 void Game::gui()

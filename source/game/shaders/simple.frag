@@ -250,5 +250,65 @@ void main()
 	vec3 wo = -normalize(viewSpacePosition);
 	vec3 n = normalize(viewSpaceNormal);
     
-    fragmentColor = vec4((calculateColorFromTexture() * has_texture) + (calculateColor(wo, n) * (1 - has_texture)), calculateCoCRadius());
+    vec3 texture_color = texture(colorMap, texCoord).xyz;
+    vec3 lightDir = vec3(1.0,1.0,1.0);
+    if (has_texture == 1)
+    {
+        texture_color = texture(material_texture, texCoord).xyz;
+        // obtain normal from normal map
+        n = texture(normalMap, fs_in.TexCoords).rgb;
+        // transform normal vector to range [-1,1]
+        n = normalize(n * 2.0 - 1.0);
+
+        //lightDir = (fs_in.TangentLightPos * normalize(viewSpaceLightPosition - fs_in.FragPos));
+        //wo = -(fs_in.TangentViewPos * normalize(viewSpacePosition - fs_in.FragPos));  
+
+        //n = normalize(normalMatrix * vec4(n, 0.0f)).xyz;
+        //normal = normalize(fs_in.TBN * normal);
+
+        vec3 color = texture(material_texture, fs_in.TexCoords).rgb;
+        vec3 ambient = 0.1*color;
+
+        lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
+        float diff = max(dot(lightDir, n), 0.0);
+        vec3 diffuse = diff * color;
+        vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
+        vec3 reflectDir = reflect(-lightDir, n);
+        vec3 halfwayDir = normalize(lightDir + viewDir);  
+        float spec = pow(max(dot(n, halfwayDir), 0.0), 32.0);
+
+        vec3 specular = vec3(0.2) * spec;
+
+        fragmentColor = vec4(ambient + diffuse + specular, 1.0);
+    }
+    else
+    {
+        vec3 materialColor = (material_color * has_material_color) + (texture(colorMap, texCoord).xyz * (1 - has_material_color));
+	    // Direct illumination
+	    vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n, materialColor);
+
+	    // Indirect illumination
+	    vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, materialColor);
+
+	    ///////////////////////////////////////////////////////////////////////////
+	    // Add emissive term. If emissive texture exists, sample this term.
+	    ///////////////////////////////////////////////////////////////////////////
+	    vec3 emission_term = material_emission * material_color;
+	    if (has_emission_texture == 1) {
+            vec2 newTexCoord = vec2((is_camera_model * (1.0 - texCoord.x)) + ((1 - is_camera_model) * texCoord.x), texCoord.y);
+	        emission_term = texture(emissiveMap, newTexCoord).xyz;
+	    }
+
+	    fragmentColor.xyz =
+		    direct_illumination_term +
+		    indirect_illumination_term +
+		    emission_term;
+
+        //normal = texture(normalMap, fs_in.texCoord).rgb;
+
+        fragmentColor = vec4(fragmentColor.xyz, calculateCoCRadius());
+    }
+
+    //fragmentColor = vec4((calculateColorFromTexture() * has_texture) + (calculateColor(wo, n) * (1 - has_texture)), calculateCoCRadius());
+    //fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
 }

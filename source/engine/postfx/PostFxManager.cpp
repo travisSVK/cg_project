@@ -57,6 +57,35 @@ namespace engine
         engine::setUniformSlow(m_postfxProgram, "numSamples", 5);
         engine::setUniformSlow(m_postfxProgram, "maxCocRadius", 4);
         engine::drawFullScreenQuad();
+        glBindFramebuffer(GL_FRAMEBUFFER, source->getFrameBufferId());
+        //m_previousViewProjectionMat = projectionMatrix * viewMatrix;
+    }
+
+    void PostFxManager::renderPostFxToMain(PostFxTypes type, engine::FboInfo* source, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
+    {
+        if (m_effects.find(type) != m_effects.end())
+        {
+            m_effects[type]->render(source);
+            // get the original viewport resolution in case the effect downsampled
+            glViewport(0, 0, m_width, m_height);
+        }
+        else
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, source->getColorTextureTarget(0));
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glUseProgram(m_postfxProgram);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, source->getDepthBuffer());
+        // engine::setUniformSlow(m_postfxProgram, "time", currentTime); //TODO add time for muschrooms effect
+        engine::setUniformSlow(m_postfxProgram, "currentEffect", static_cast<int>(type));
+        //engine::setUniformSlow(m_postfxProgram, "filterSize", filterSizes[filterSize - 1]); // TODO add filter size for blur
+        engine::setUniformSlow(m_postfxProgram, "viewProjectionInverseMatrix", inverse(projectionMatrix * viewMatrix));
+        engine::setUniformSlow(m_postfxProgram, "previousViewProjectionMatrix", m_previousViewProjectionMat);
+        engine::setUniformSlow(m_postfxProgram, "numSamples", 5);
+        engine::setUniformSlow(m_postfxProgram, "maxCocRadius", 4);
+        engine::drawFullScreenQuad();
         m_previousViewProjectionMat = projectionMatrix * viewMatrix;
     }
 

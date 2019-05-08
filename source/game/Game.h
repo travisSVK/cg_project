@@ -27,7 +27,6 @@ private:
     void initGL();
     bool handleEvents();
     void gui();
-    void renderToGameCamera(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);
 
 private:
     bool m_gameCameraActive;
