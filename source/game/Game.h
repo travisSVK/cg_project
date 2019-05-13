@@ -11,6 +11,7 @@ namespace engine
     class FlareManager;
     class EnvironmentManager;
     class FboInfo;
+    class CollisionManager;
 }
 
 class GameCamera;
@@ -34,6 +35,7 @@ private:
     engine::FlareManager* m_flareManager;
     engine::EnvironmentManager* m_environmentManager;
     engine::PostFxManager* m_postfxManager;
+    engine::CollisionManager* m_collisionManager;
     engine::FboInfo* m_mainFrameBuffer;
     engine::Scene* m_scene;
     GameCamera* m_gameCamera;

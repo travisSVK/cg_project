@@ -103,6 +103,7 @@ namespace engine
         bool m_loaded;
         bool m_enabled;
         glm::mat4 m_modelMatrix;
+        glm::mat4 m_previousModelMatrix;
     public:
         glm::mat4 getModelMatrix();
 	};

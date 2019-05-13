@@ -107,6 +107,10 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 materialColor)
     }
     
     vec3 diffuse_term = materialColor * (1.0 / PI) * abs(dot(n, wi)) * li;
+    if(material_reflectivity == 0.0)
+    {
+        return diffuse_term;
+    }
 
 	///////////////////////////////////////////////////////////////////////////
 	// Task 2 - Calculate the Torrance Sparrow BRDF and return the light 
@@ -146,17 +150,16 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 materialColor)
     vec2 lookup = vec2(phi / (2.0 * PI), theta / PI);
     
     vec3 diffuse_term = materialColor * (1.0 / PI) * environment_multiplier * texture(irradianceMap, lookup).rgb;
-
+    if(material_reflectivity == 0.0)
+    {
+        return diffuse_term;
+    }
     ///////////////////////////////////////////////////////////////////////////
 	// Task 6 - Look up in the reflection map from the perfect specular 
 	//          direction and calculate the dielectric and metal terms. 
 	/////////////////////////////////////////////////////////////////////////
     
     vec3 wi = normalize(reflect(-wo, n));
-    if (has_texture == 1)
-    {
-        //wi = lightDir;
-    }
 
     theta = acos(max(-1.0f, min(1.0f, wi.y)));
 	phi = atan(wi.z, wi.x);
@@ -260,12 +263,6 @@ void main()
         // transform normal vector to range [-1,1]
         n = normalize(n * 2.0 - 1.0);
 
-        //lightDir = (fs_in.TangentLightPos * normalize(viewSpaceLightPosition - fs_in.FragPos));
-        //wo = -(fs_in.TangentViewPos * normalize(viewSpacePosition - fs_in.FragPos));  
-
-        //n = normalize(normalMatrix * vec4(n, 0.0f)).xyz;
-        //normal = normalize(fs_in.TBN * normal);
-
         vec3 color = texture(material_texture, fs_in.TexCoords).rgb;
         vec3 ambient = 0.1*color;
 
@@ -304,11 +301,6 @@ void main()
 		    indirect_illumination_term +
 		    emission_term;
 
-        //normal = texture(normalMap, fs_in.texCoord).rgb;
-
         fragmentColor = vec4(fragmentColor.xyz, calculateCoCRadius());
     }
-
-    //fragmentColor = vec4((calculateColorFromTexture() * has_texture) + (calculateColor(wo, n) * (1 - has_texture)), calculateCoCRadius());
-    //fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
 }

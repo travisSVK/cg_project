@@ -10,6 +10,13 @@ namespace engine
         m_models[modelId] = model;
     }
 
+    void ModelManager::createModel(unsigned int modelId, const glm::mat4& modelMatrix)
+    {
+        Model* model = new Model();
+        model->m_modelMatrix = modelMatrix;
+        m_models[modelId] = model;
+    }
+
     Model* ModelManager::getModel(unsigned int modelId)
     {
         return m_models[modelId];
@@ -17,7 +24,7 @@ namespace engine
 
     void ModelManager::addModel(Model* model, unsigned int modelId)
     {
-        Model* model2 = new Model;
+        Model* model2 = new Model();
         model2->m_bitTangents = model->m_bitTangents;
         model2->m_bitTangents_bo = model->m_bitTangents_bo;
         model2->m_filename = model->m_filename;
