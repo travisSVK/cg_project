@@ -23,7 +23,7 @@ void GameCamera::activateGameCameraFB()
 
 void GameCamera::renderGameCamera(GLuint program, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)
 {
-    engine::Material &cameraScreen = m_cameraModel->m_materials[6];
+    engine::Material &cameraScreen = m_cameraModel->m_materials[4];
     cameraScreen.m_emission_texture.gl_id = m_cameraFrameBuffer->getColorTextureTarget(0);
     cameraScreen.m_emission_texture.valid = true;
     glm::mat3 inverseRotationMatrix = viewMatrix;

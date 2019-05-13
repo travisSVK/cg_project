@@ -111,6 +111,10 @@ void Game::initialize()
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HouseModel)), modelMatrix);
     engine::BoundingBox* houseBoundingBox = new engine::BoundingBox(glm::vec3(27.0f, 10.0f, 15.0f), -0.227f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::HouseModel)));
     m_collisionManager->addStaticCollider(houseBoundingBox);
+
+    modelMatrix = glm::translate(glm::vec3(80.0, 13.0, 70.0));
+    m_modelManager->createModel("../scenes/well.obj", static_cast<unsigned int>(GameModels::WellModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::WellModel)), modelMatrix);
      
     //setup terrain
     m_heightfield.generateMesh(64);
