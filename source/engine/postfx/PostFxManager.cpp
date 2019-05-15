@@ -57,7 +57,7 @@ namespace engine
         engine::setUniformSlow(m_postfxProgram, "numSamples", 5);
         engine::setUniformSlow(m_postfxProgram, "maxCocRadius", 4);
         engine::drawFullScreenQuad();
-        glBindFramebuffer(GL_FRAMEBUFFER, source->getFrameBufferId());
+        //glBindFramebuffer(GL_FRAMEBUFFER, source->getFrameBufferId());
         //m_previousViewProjectionMat = projectionMatrix * viewMatrix;
     }
 

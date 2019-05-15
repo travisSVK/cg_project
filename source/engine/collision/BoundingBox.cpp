@@ -83,11 +83,8 @@ namespace engine
         }
         if ((m_type == ColliderType::Dynamic) && (other == ColliderType::Static))
         {
-            // TODO reset model matrix?
-            m_model->m_modelMatrix;
+            m_model->m_modelMatrix = m_model->m_previousModelMatrix;
         }
-
-        
     }
 
     void BoundingBox::getColliderInfo(std::vector<glm::vec3>& edges, std::vector<glm::vec3>& vertices)

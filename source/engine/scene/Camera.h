@@ -13,9 +13,11 @@ namespace engine
         float getCameraSpeed();
         void setDirection(const glm::vec3& direction);
         void setPosition(const glm::vec3& position);
+        void resetPosition();
 
     private:
         glm::vec3 m_position;
+        glm::vec3 m_previousPosition;
         glm::vec3 m_direction;
         glm::vec3 m_worldUp;
         float m_cameraSpeed;

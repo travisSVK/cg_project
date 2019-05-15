@@ -19,11 +19,13 @@
 #include "collision/BoundingBox.h"
 #include "FboInfo.h"
 #include "scene/Scene.h"
+#include "scene/Sun.h"
 #include "scene/Camera.h"
 #include "Helper.h"
 #include "model/Model.h"
 // game spacific includes
 #include "scene/GameCamera.h"
+#include "collision/CameraBoundingBox.h"
 #include "Enums.h"
 
 
@@ -59,15 +61,16 @@ void Game::initialize()
     //m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::FighterModel)));
     modelMatrix = glm::translate(glm::vec3(-70.0f, 15.0f, 70.0f));
     m_modelManager->createModel("../scenes/photocameraRotated.obj", static_cast<unsigned int>(GameModels::CameraModel), modelMatrix);
-    m_modelManager->createModel(static_cast<unsigned int>(GameModels::PlayerModel), modelMatrix);
-    engine::BoundingBox* cameraBoundingBox = new engine::BoundingBox(glm::vec3(2.0f, 10.0f, 2.0f), 0.0f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::PlayerModel)));
+    
+    CameraBoundingBox* cameraBoundingBox = new CameraBoundingBox(
+        glm::vec3(5.0f, 10.0f, 5.0f), 0.0f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::CameraModel)), m_scene->getCamera());
     m_collisionManager->addDynamicCollider(cameraBoundingBox);
 
     // tree dimensions x = 10 y = 20 z = 10
-    modelMatrix = glm::translate(glm::vec3(-70.0f, 10.0f, 70.0f));
+    modelMatrix = glm::translate(glm::vec3(-60.0f, 10.0f, 60.0f));
     m_modelManager->createModel("../scenes/treeDecimated.obj", static_cast<unsigned int>(GameModels::TreeModel), modelMatrix);
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
-    engine::BoundingBox* treeBoundingBox = new engine::BoundingBox(glm::vec3(2.0f, 20.0f, 2.0f), 0.0f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)));
+    engine::BoundingBox* treeBoundingBox = new engine::BoundingBox(glm::vec3(1.0f, 20.0f, 1.0f), 0.0f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)));
     m_collisionManager->addStaticCollider(treeBoundingBox);
     
     /*modelMatrix = glm::translate(glm::vec3(65.0, 10.0, 65.0));
@@ -123,7 +126,7 @@ void Game::initialize()
 
     // setup quests
     m_questManager.addQuest("Take a photo of this another nice tree.", glm::vec3(0.0f), glm::vec3(0.0f), static_cast<int>(engine::PostFxManager::PostFxTypes::None));
-    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 5.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 5.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None));
+    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None));
 
     // setup game variables
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
@@ -193,18 +196,22 @@ bool Game::handleEvents()
     // check keyboard state (which keys are still pressed)
     const uint8_t *state = SDL_GetKeyboardState(nullptr);
     glm::vec3 cameraRight = glm::cross(camera->getDirection(), camera->getWorldUp());
-
+    glm::vec3 cameraPosition = camera->getPosition();
     if (state[SDL_SCANCODE_W]) {
-        camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
+        cameraPosition += camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
+        //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
     }
     if (state[SDL_SCANCODE_S]) {
-        camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
+        cameraPosition -= camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
+        //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
     }
     if (state[SDL_SCANCODE_A]) {
-        camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * cameraRight));
+        cameraPosition -= camera->getCameraSpeed() * cameraRight;
+        //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * cameraRight));
     }
     if (state[SDL_SCANCODE_D]) {
-        camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * cameraRight));
+        cameraPosition += camera->getCameraSpeed() * cameraRight;
+        //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * cameraRight));
     }
     if (state[SDL_SCANCODE_E]) {
         m_gameCameraActive = true;
@@ -215,11 +222,10 @@ bool Game::handleEvents()
     if (state[SDL_SCANCODE_F] && m_gameCameraActive) {
         m_questManager.checkQuestCompletion(camera->getPosition(), camera->getDirection(), static_cast<int>(m_currentEffect));
     }
+    camera->setPosition(cameraPosition);
     glm::mat4 modelMatrix = glm::translate(camera->getPosition() + (camera->getDirection() * 5.0f));
     //modelMatrix = modelMatrix * gameCameraYaw * gameCameraPitch;
     m_gameCamera->updateCameraMatrix(modelMatrix);
-    modelMatrix = glm::translate(camera->getPosition());
-    m_modelManager->getModel(static_cast<unsigned int>(GameModels::PlayerModel))->m_modelMatrix = modelMatrix;
     // TODO rotate the player bounding box according to camera x,y
 
     return quitEvent;
@@ -233,10 +239,6 @@ void Game::render()
         m_scene->getCamera()->getPosition() + m_scene->getCamera()->getDirection(), 
         m_scene->getCamera()->getWorldUp());
 
-    /*if (m_gameCameraActive)
-    {
-        renderToGameCamera(viewMatrix, projectionMatrix);
-    }*/
     // render environment
     glBindFramebuffer(GL_FRAMEBUFFER, m_mainFrameBuffer->getFrameBufferId());
     glViewport(0, 0, m_width, m_height);
@@ -246,6 +248,11 @@ void Game::render()
     m_postfxManager->setShaderValues(m_currentEffect, m_environmentManager->getEnvironmentProgram());
     m_environmentManager->renderEnvironment(projectionMatrix, viewMatrix, m_scene->getCamera()->getPosition());
     
+    //render sun
+    /*glUseProgram(m_scene->getSceneProgram());
+    m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
+    m_scene->renderSun(projectionMatrix, viewMatrix);*/
+
     // render terrain
     m_postfxManager->setShaderValues(m_currentEffect, m_heightfield.useProgram());
     m_heightfield.useProgram();
@@ -259,12 +266,21 @@ void Game::render()
     if (m_gameCameraActive)
     {
         m_postfxManager->renderPostFx(m_currentEffect, m_mainFrameBuffer, m_gameCamera->getGameCameraFB(), projectionMatrix, viewMatrix);
+        if (m_useLensFlare)
+        {
+            m_flareManager->render(viewMatrix, projectionMatrix, m_scene->getSun()->getPosition(), m_mainFrameBuffer->getDepthBuffer());
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, m_mainFrameBuffer->getFrameBufferId());
         glUseProgram(m_scene->getSceneProgram());
         m_gameCamera->renderGameCamera(m_scene->getSceneProgram(), viewMatrix, projectionMatrix);
     }
     m_collisionManager->renderColliders(viewMatrix, projectionMatrix);
     m_postfxManager->renderPostFxToMain(engine::PostFxManager::PostFxTypes::None, m_mainFrameBuffer, projectionMatrix, viewMatrix);
-
+    
+    /*if (m_useLensFlare)
+    {
+        m_flareManager->render(viewMatrix, projectionMatrix, m_scene->getSun()->getPosition());
+    }*/
     CHECK_GL_ERROR();
 
     gui();

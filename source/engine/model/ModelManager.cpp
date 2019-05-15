@@ -7,13 +7,7 @@ namespace engine
     {
         Model* model = engine::loadModelFromOBJ(path);
         model->m_modelMatrix = modelMatrix;
-        m_models[modelId] = model;
-    }
-
-    void ModelManager::createModel(unsigned int modelId, const glm::mat4& modelMatrix)
-    {
-        Model* model = new Model();
-        model->m_modelMatrix = modelMatrix;
+        model->m_previousModelMatrix = modelMatrix;
         m_models[modelId] = model;
     }
 

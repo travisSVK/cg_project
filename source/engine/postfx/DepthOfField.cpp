@@ -25,10 +25,10 @@ namespace engine
 
     void DepthOfField::setShaderValues(GLuint program)
     {
-        engine::setUniformSlow(program, "nearSharpPlane", 10.0f);
-        engine::setUniformSlow(program, "farSharpPlane", -10.0f);
-        engine::setUniformSlow(program, "nearBlurryPlane", 70.0f);
-        engine::setUniformSlow(program, "farBlurryPlane", -70.0f);
+        engine::setUniformSlow(program, "nearSharpPlane", 50.0f);
+        engine::setUniformSlow(program, "farSharpPlane", 10.0f);
+        engine::setUniformSlow(program, "nearBlurryPlane", 110.0f);
+        engine::setUniformSlow(program, "farBlurryPlane", -50.0f);
         engine::setUniformSlow(program, "farCoC", -4);
         engine::setUniformSlow(program, "nearCoC", 4);
         engine::setUniformSlow(program, "focusCoC", 0.0f);

@@ -14,7 +14,7 @@ namespace engine
     loadTextures();
 }
 
-void FlareManager::render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& lightPosition)
+void FlareManager::render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& lightPosition, GLuint depthBuffer)
 {
     glm::mat4 newViewMatrix = viewMatrix;
     newViewMatrix[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // lets keep the sun at the same spot and without bilboard rotation
@@ -26,10 +26,12 @@ void FlareManager::render(const glm::mat4& viewMatrix, const glm::mat4& projecti
     }
     // subtract coords from center of the screen to get the vector
     glm::vec2 lightToCenter = glm::vec2(0.5f, 0.5f) - lightCoords;
-    float brightness = (1 - (glm::length(lightToCenter) / 0.7f)) / 2.0f;
+    //float brightness = (1 - glm::length(lightToCenter / 0.7f)) / 3.0f;
+    float brightness = 0.05f;
     if (brightness > 0) {
         calcFlarePositions(lightToCenter, lightCoords);
-        m_flareRenderer->render(m_textures, brightness, m_screenWidth, m_screenHeight);
+        lightCoords.y = 1 - lightCoords.y;
+        m_flareRenderer->render(m_textures, brightness, m_screenWidth, m_screenHeight, lightCoords, depthBuffer);
     }
 }
 

@@ -10,6 +10,7 @@ GameCamera::GameCamera(engine::Model* gameCameraModel, int width, int height) : 
 
 void GameCamera::updateCameraMatrix(const glm::mat4& gameCameraMatrix)
 {
+    m_cameraModel->m_previousModelMatrix = m_cameraModel->m_modelMatrix;
     m_cameraModel->m_modelMatrix = gameCameraMatrix;
 }
 

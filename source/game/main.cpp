@@ -498,7 +498,7 @@ void display()
 
     if (currentEffect == PostProcessingEffect::Lens_Flare)
     {
-        flareManager->render(viewMatrix, projectionMatrix, lightPosition);
+        //flareManager->render(viewMatrix, projectionMatrix, lightPosition);
     }
 
     previousViewProjection = projectionMatrix * viewMatrix;

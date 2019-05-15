@@ -11,7 +11,7 @@ namespace engine
     {
         glGenVertexArrays(1, &m_sunVao);
         glBindVertexArray(m_sunVao);
-        m_position = glm::vec3(65.0f, 115.0f, 500.0f);
+        m_position = glm::vec3(-65.0f, 115.0f, -500.0f);
         const float positions[] = {
             // X Y Z
             -80.0f, -80.0f, 0.0f,    // v0

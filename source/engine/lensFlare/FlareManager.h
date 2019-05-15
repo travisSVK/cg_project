@@ -1,5 +1,6 @@
 #pragma once
 #include "../model/Model.h"
+#include <GL/glew.h>
 
 namespace engine
 {
@@ -9,7 +10,7 @@ namespace engine
     public:
         FlareManager(float spacing, int w, int h);
         void destroy();
-        void render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& lightPosition);
+        void render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& lightPosition, GLuint depthBuffer);
 
     private:
         void loadTextures();

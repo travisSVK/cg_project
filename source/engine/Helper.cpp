@@ -586,6 +586,10 @@ namespace engine {
 		int loc = glGetUniformLocation(shaderProgram, name);
 		glUniform1i(loc, value);
 	}
+    void setUniformSlow(GLuint shaderProgram, const char *name, const glm::vec2 &value)
+    {
+        glUniform2fv(glGetUniformLocation(shaderProgram, name), 1, &value.x);
+    }
 	void setUniformSlow(GLuint shaderProgram, const char *name, const glm::vec3 &value)
 	{
 		glUniform3fv(glGetUniformLocation(shaderProgram, name), 1, &value.x);

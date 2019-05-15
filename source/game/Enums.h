@@ -6,6 +6,5 @@ enum class GameModels : unsigned int
     CameraModel = 1,
     TreeModel = 2,
     HouseModel = 3,
-    PlayerModel = 4,
-    WellModel = 5
+    WellModel = 4
 };
