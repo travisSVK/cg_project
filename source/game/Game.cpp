@@ -132,6 +132,7 @@ void Game::initialize()
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
     m_useLensFlare = false;
     m_gameCameraActive = false;
+    m_showColliders = false;
 
     initGL();
 }
@@ -274,7 +275,10 @@ void Game::render()
         glUseProgram(m_scene->getSceneProgram());
         m_gameCamera->renderGameCamera(m_scene->getSceneProgram(), viewMatrix, projectionMatrix);
     }
-    m_collisionManager->renderColliders(viewMatrix, projectionMatrix);
+    if (m_showColliders)
+    {
+        m_collisionManager->renderColliders(viewMatrix, projectionMatrix);
+    }
     m_postfxManager->renderPostFxToMain(engine::PostFxManager::PostFxTypes::None, m_mainFrameBuffer, projectionMatrix, viewMatrix);
     
     /*if (m_useLensFlare)
@@ -329,6 +333,14 @@ void Game::gui()
         //ImGui::Text(quest.m_description.c_str());
     }
     ImGui::Text(m_questManager.getCurrentQuestObjective().c_str());
+    ImGui::End();
+
+    ImGui::Begin("Debug + screen effects");
+    ImGui::SetWindowPos(ImVec2(1500, 20));
+    // ----------------- Set variables --------------------------
+    ImGui::Text("Show colliders");
+    ImGui::RadioButton("On", (int*)&m_showColliders, true);
+    ImGui::RadioButton("Off", (int*)&m_showColliders, false);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
 

@@ -38,6 +38,7 @@ private:
     engine::CollisionManager* m_collisionManager;
     engine::FboInfo* m_mainFrameBuffer;
     engine::Scene* m_scene;
+    engine::HeightField m_heightfield;
     GameCamera* m_gameCamera;
     QuestManager m_questManager;
     SDL_Window* m_window;
@@ -45,5 +46,5 @@ private:
     int m_height;
     engine::PostFxManager::PostFxTypes m_currentEffect;
     bool m_useLensFlare;
-    engine::HeightField m_heightfield;
+    bool m_showColliders;
 };
