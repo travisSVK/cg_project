@@ -37,7 +37,7 @@ std::vector<Quest> QuestManager::getFinishedQuests()
     return m_finishedQuests;
 }
 
-void QuestManager::checkQuestCompletion(const glm::vec3& position, const glm::vec3& direction, int effect, bool lensFlareOn)
+bool QuestManager::checkQuestCompletion(const glm::vec3& position, const glm::vec3& direction, int effect, bool lensFlareOn)
 {
     if (m_quests.size() > 0)
     {
@@ -51,8 +51,10 @@ void QuestManager::checkQuestCompletion(const glm::vec3& position, const glm::ve
             (q.m_expectedEffect == effect) && (q.m_lensFlareOn == lensFlareOn))
         {
             m_quests.at(m_quests.size() - 1).m_completed = true;
+            return true;
         }
     }
+    return false;
 }
 
 bool QuestManager::isCurrentPositionWithinRange(const glm::vec3& position)

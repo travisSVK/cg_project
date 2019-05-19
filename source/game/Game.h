@@ -42,6 +42,7 @@ private:
     GameCamera* m_gameCamera;
     QuestManager m_questManager;
     SDL_Window* m_window;
+    float m_flashTime;
     int m_width;
     int m_height;
     engine::PostFxManager::PostFxTypes m_currentEffect;

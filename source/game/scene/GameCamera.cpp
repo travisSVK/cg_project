@@ -2,10 +2,13 @@
 #include "model/Model.h"
 #include "FboInfo.h"
 #include "Helper.h"
+#include <iostream>
+#include <stb_image.h>
 
 GameCamera::GameCamera(engine::Model* gameCameraModel, int width, int height) : m_cameraModel(gameCameraModel)
 {
     m_cameraFrameBuffer = new engine::FboInfo(width, height, 1);
+    m_cameraFlashProgram = engine::loadShaderProgram("shaders/postFx.vert", "shaders/cameraFlash.frag", "", "");
 }
 
 void GameCamera::updateCameraMatrix(const glm::mat4& gameCameraMatrix)
@@ -62,6 +65,21 @@ void GameCamera::resetParametersForCameraDisplay(GLuint program, const glm::mat4
     engine::setUniformSlow(program, "modelViewMatrix", viewMatrix * m_cameraModel->getModelMatrix() * inverseRot);
     engine::setUniformSlow(program, "normalMatrix", glm::inverse(glm::transpose(viewMatrix * m_cameraModel->getModelMatrix() * inverseRot)));
     engine::setUniformSlow(program, "modelMatrix", m_cameraModel->getModelMatrix());
+}
+
+void GameCamera::renderCameraFlash(float flashTime)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glUseProgram(m_cameraFlashProgram);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    engine::setUniformSlow(m_cameraFlashProgram, "flashTime", flashTime);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    engine::drawFullScreenQuad();
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 }
 
 engine::FboInfo* GameCamera::getGameCameraFB()

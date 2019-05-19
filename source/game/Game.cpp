@@ -136,6 +136,7 @@ void Game::initialize()
     m_gameCameraActive = false;
     m_showColliders = false;
     m_showTeselatedTerrain = false;
+    m_flashTime = 0.0f;
 
     initGL();
 }
@@ -172,18 +173,22 @@ bool Game::handleEvents()
     engine::Camera* camera = m_scene->getCamera();
     glm::mat4 gameCameraYaw = glm::rotate(0.0f, camera->getWorldUp());;
     glm::mat4 gameCameraPitch = glm::rotate(0.0f, glm::normalize(glm::cross(camera->getDirection(), camera->getWorldUp())));
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT || (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_ESCAPE)) {
+    while (SDL_PollEvent(&event)) 
+    {
+        if (event.type == SDL_QUIT || (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_ESCAPE)) 
+        {
             quitEvent = true;
         }
-        if (event.type == SDL_MOUSEMOTION && !ImGui::IsMouseHoveringAnyWindow()) {
+        if (event.type == SDL_MOUSEMOTION && !ImGui::IsMouseHoveringAnyWindow()) 
+        {
             // More info at https://wiki.libsdl.org/SDL_MouseMotionEvent
             static int prev_xcoord = event.motion.x;
             static int prev_ycoord = event.motion.y;
             int delta_x = event.motion.x - prev_xcoord;
             int delta_y = event.motion.y - prev_ycoord;
 
-            if (event.button.button & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+            if (event.button.button & SDL_BUTTON(SDL_BUTTON_LEFT)) 
+            {
                 float rotationSpeed = 0.0005f;
                 glm::mat4 yaw = glm::rotate(rotationSpeed * -delta_x, camera->getWorldUp());
                 glm::mat4 pitch = glm::rotate(rotationSpeed * -delta_y, glm::normalize(glm::cross(camera->getDirection(), camera->getWorldUp())));
@@ -201,30 +206,38 @@ bool Game::handleEvents()
     const uint8_t *state = SDL_GetKeyboardState(nullptr);
     glm::vec3 cameraRight = glm::cross(camera->getDirection(), camera->getWorldUp());
     glm::vec3 cameraPosition = camera->getPosition();
-    if (state[SDL_SCANCODE_W]) {
+    if (state[SDL_SCANCODE_W]) 
+    {
         cameraPosition += camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
         //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
     }
-    if (state[SDL_SCANCODE_S]) {
+    if (state[SDL_SCANCODE_S]) 
+    {
         cameraPosition -= camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
         //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
     }
-    if (state[SDL_SCANCODE_A]) {
+    if (state[SDL_SCANCODE_A]) 
+    {
         cameraPosition -= camera->getCameraSpeed() * cameraRight;
         //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * cameraRight));
     }
-    if (state[SDL_SCANCODE_D]) {
+    if (state[SDL_SCANCODE_D]) 
+    {
         cameraPosition += camera->getCameraSpeed() * cameraRight;
         //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * cameraRight));
     }
-    if (state[SDL_SCANCODE_E]) {
+    if (state[SDL_SCANCODE_E]) 
+    {
         m_gameCameraActive = true;
     }
-    if (state[SDL_SCANCODE_Q]) {
+    if (state[SDL_SCANCODE_Q]) 
+    {
         m_gameCameraActive = false;
     }
-    if (state[SDL_SCANCODE_F] && m_gameCameraActive) {
-        m_questManager.checkQuestCompletion(camera->getPosition(), camera->getDirection(), static_cast<int>(m_currentEffect), m_useLensFlare);
+    if (state[SDL_SCANCODE_F] && m_gameCameraActive && 
+        m_questManager.checkQuestCompletion(camera->getPosition(), camera->getDirection(), static_cast<int>(m_currentEffect), m_useLensFlare))
+    {
+        m_flashTime = 1.0f;
     }
     camera->setPosition(cameraPosition);
     glm::mat4 modelMatrix = glm::translate(camera->getPosition() + (camera->getDirection() * 5.0f));
@@ -281,6 +294,11 @@ void Game::render()
         m_collisionManager->renderColliders(viewMatrix, projectionMatrix);
     }
     m_postfxManager->renderPostFxToMain(m_currentScreenEffect, m_mainFrameBuffer, projectionMatrix, viewMatrix);
+    if (m_flashTime > 0.0f)
+    {
+        m_gameCamera->renderCameraFlash(m_flashTime);
+        m_flashTime -= 0.01f;
+    }
     
     /*if (m_useLensFlare)
     {
