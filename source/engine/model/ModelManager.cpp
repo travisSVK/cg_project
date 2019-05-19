@@ -3,12 +3,13 @@
 
 namespace engine
 {
-    void ModelManager::createModel(const char* path, unsigned int modelId, const glm::mat4& modelMatrix)
+    Model* ModelManager::createModel(const char* path, unsigned int modelId, const glm::mat4& modelMatrix)
     {
         Model* model = engine::loadModelFromOBJ(path);
         model->m_modelMatrix = modelMatrix;
         model->m_previousModelMatrix = modelMatrix;
         m_models[modelId] = model;
+        return model;
     }
 
     Model* ModelManager::getModel(unsigned int modelId)
@@ -16,7 +17,7 @@ namespace engine
         return m_models[modelId];
     }
 
-    void ModelManager::addModel(Model* model, unsigned int modelId)
+    Model* ModelManager::addModel(Model* model, unsigned int modelId)
     {
         Model* model2 = new Model();
         model2->m_bitTangents = model->m_bitTangents;
@@ -37,6 +38,7 @@ namespace engine
         model2->m_texture_coordinates_bo = model->m_texture_coordinates_bo;
         model2->m_vaob = model->m_vaob;
         m_models[modelId] = model2;
+        return model2;
     }
 
     void ModelManager::destroy()

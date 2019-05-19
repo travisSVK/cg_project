@@ -101,7 +101,7 @@ namespace engine {
 		stbi_set_flip_vertically_on_load(true);
 
 		// 1 for v-sync
-		SDL_GL_SetSwapInterval(1);
+		SDL_GL_SetSwapInterval(0);
 
 		/* Workaround for AMD. It might no longer be necessary, but I dunno if we
 		* are ever going to remove it. (Consider it a piece of living history.)

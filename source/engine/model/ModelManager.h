@@ -8,10 +8,9 @@ namespace engine
     class ModelManager
     {
     public:
-        void createModel(const char* path, unsigned int modelId, const glm::mat4& modelMatrix);
-        void createModel(unsigned int modelId, const glm::mat4& modelMatrix);
+        Model* createModel(const char* path, unsigned int modelId, const glm::mat4& modelMatrix);
         Model* getModel(unsigned int modelId);
-        void addModel(Model* model, unsigned int modelId);
+        Model* addModel(Model* model, unsigned int modelId);
         void destroy();
 
     private:

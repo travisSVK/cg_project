@@ -54,7 +54,7 @@ void Game::initialize()
     //m_environmentManager->createEnvironmentTexture("../scenes/ghost_color_gradient.psd", engine::EnvironmentManager::EnvironmentTextureType::GradientTexture);
 
     //setup scene
-    m_scene = new engine::Scene(glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)));
+    m_scene = new engine::Scene(glm::vec3(90.0f, 15.0f, 80.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)));
     // Load some models.
     glm::mat4 modelMatrix = glm::translate(60.0f * m_scene->getCamera()->getWorldUp());
     //m_modelManager->createModel("../scenes/NewShip.obj", static_cast<unsigned int>(GameModels::FighterModel), modelMatrix);
@@ -67,47 +67,130 @@ void Game::initialize()
     m_collisionManager->addDynamicCollider(cameraBoundingBox);
 
     // tree dimensions x = 10 y = 20 z = 10
-    modelMatrix = glm::translate(glm::vec3(-60.0f, 10.0f, 60.0f));
-    m_modelManager->createModel("../scenes/treeDecimated.obj", static_cast<unsigned int>(GameModels::TreeModel), modelMatrix);
+
+    std::vector<engine::Model*> treeModels;
+
+    modelMatrix = glm::translate(glm::vec3(65.0, 10.0, 65.0));
+    treeModels.push_back(m_modelManager->createModel("../scenes/treeDecimated.obj", static_cast<unsigned int>(GameModels::TreeModel), modelMatrix));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix); 
+
+    modelMatrix = glm::translate(glm::vec3(35.0, 10.0, 10.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
-    engine::BoundingBox* treeBoundingBox = new engine::BoundingBox(glm::vec3(1.0f, 20.0f, 1.0f), 0.0f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)));
-    m_collisionManager->addStaticCollider(treeBoundingBox);
-    
-    /*modelMatrix = glm::translate(glm::vec3(65.0, 10.0, 65.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+       
+    modelMatrix = glm::translate(glm::vec3(30.0, 10.0, 5.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+        
+    modelMatrix = glm::translate(glm::vec3(30.0, 10.0, 15.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+         
+    modelMatrix = glm::translate(glm::vec3(30.0, 10.0, 20.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+         
+    modelMatrix = glm::translate(glm::vec3(35.0, 10.0, 25.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(70.0, 10.0, 65.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(70.0, 10.0, 70.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(35.0, 10.0, 30.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(40.0, 10.0, 30.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(40.0, 10.0, 35.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(45.0, 10.0, 35.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(45.0, 10.0, 40.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(50.0, 10.0, 40.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(40.0, 10.0, 40.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(40.0, 10.0, -10.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(30.0, 10.0, -10.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(35.0, 10.0, 0.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(30.0, 10.0, -5.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(20.0, 10.0, -5.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(110.0, 10.0, 110.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(100.0, 10.0, 120.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(100.0, 10.0, 110.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(90.0, 10.0, 110.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(90.0, 10.0, 120.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(90.0, 10.0, 110.0));
-    m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel));
-    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);*/
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(95.0, 10.0, 115.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(135.0, 10.0, 30.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    
+    modelMatrix = glm::translate(glm::vec3(145.0, 10.0, 30.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+
+    for (auto model : treeModels)
+    {
+        engine::BoundingBox* treeBoundingBox = new engine::BoundingBox(glm::vec3(1.0f, 20.0f, 1.0f), 0.0f,model);
+        m_collisionManager->addStaticCollider(treeBoundingBox);
+    }
 
     modelMatrix = glm::translate(glm::vec3(100.0, 17.8, 30.0));
     m_modelManager->createModel("../scenes/house.obj", static_cast<unsigned int>(GameModels::HouseModel), modelMatrix);
@@ -118,6 +201,47 @@ void Game::initialize()
     modelMatrix = glm::translate(glm::vec3(80.0, 13.0, 70.0));
     m_modelManager->createModel("../scenes/well.obj", static_cast<unsigned int>(GameModels::WellModel), modelMatrix);
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::WellModel)), modelMatrix);
+    engine::BoundingBox* wellBoundingBox = new engine::BoundingBox(glm::vec3(3.2f, 10.0f, 3.2f), 0.0f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::WellModel)));
+    m_collisionManager->addStaticCollider(wellBoundingBox);
+
+    modelMatrix = glm::translate(glm::vec3(150.0, 11.4, 60.0));
+    m_modelManager->createModel("../scenes/bench.obj", static_cast<unsigned int>(GameModels::BenchModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)), modelMatrix);
+    engine::BoundingBox* benchBoundingBox = new engine::BoundingBox(glm::vec3(80.5f, 10.0f, 2.0f), 4.71f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)));
+    m_collisionManager->addStaticCollider(benchBoundingBox);
+
+    modelMatrix = glm::translate(glm::vec3(145.0, 11.4, 90.0));
+    m_modelManager->createModel("../scenes/bench2.obj", static_cast<unsigned int>(GameModels::BenchModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)), modelMatrix);
+    engine::BoundingBox* bench2BoundingBox = new engine::BoundingBox(glm::vec3(80.5f, 10.0f, 2.0f), 3.83f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)));
+    m_collisionManager->addStaticCollider(bench2BoundingBox);
+
+    modelMatrix = glm::translate(glm::vec3(60.0, 11.4, 0.0));
+    m_modelManager->createModel("../scenes/bench3.obj", static_cast<unsigned int>(GameModels::BenchModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)), modelMatrix);
+    engine::BoundingBox* bench3BoundingBox = new engine::BoundingBox(glm::vec3(20.0f, 10.0f, 2.0f), 5.37f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)));
+    m_collisionManager->addStaticCollider(bench3BoundingBox);
+
+    modelMatrix = glm::translate(glm::vec3(45.0, 11.4, 30.0));
+    m_modelManager->createModel("../scenes/bench4.obj", static_cast<unsigned int>(GameModels::BenchModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)), modelMatrix);
+    engine::BoundingBox* bench4BoundingBox = new engine::BoundingBox(glm::vec3(40.0f, 10.0f, 2.0f), 2.04f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)));
+    m_collisionManager->addStaticCollider(bench4BoundingBox);
+    
+    modelMatrix = glm::translate(glm::vec3(80.0, 11.4, 90.0));
+    m_modelManager->createModel("../scenes/bench4.obj", static_cast<unsigned int>(GameModels::BenchModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)), modelMatrix);
+    engine::BoundingBox* bench4BoundingBox2 = new engine::BoundingBox(glm::vec3(15.0f, 10.0f, 2.0f), 2.04f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::BenchModel)));
+    m_collisionManager->addStaticCollider(bench4BoundingBox2);
+
+    modelMatrix = glm::translate(glm::vec3(140.0, 9.8, 90.0));
+    m_modelManager->createModel("../scenes/VictoryGuy.obj", static_cast<unsigned int>(GameModels::VictoryGuyModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::VictoryGuyModel)), modelMatrix);
+
+    modelMatrix = glm::translate(glm::vec3(110.0f, 11.2f, 70.0f));
+    m_modelManager->createModel("../scenes/helipad.obj", static_cast<unsigned int>(GameModels::HeliPadModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);
+
      
     //setup terrain
     m_heightfield.generateMesh(64);
@@ -127,7 +251,7 @@ void Game::initialize()
     // setup quests
     m_questManager.addQuest("Take a photo of this beautiful sunset over house.", glm::vec3(137.5f, 15.0f, 109.0f), glm::vec3(-0.437f, 0.06f, -0.897f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), true);
     m_questManager.addQuest("Take a photo of this beautiful house.", glm::vec3(74.0f, 15.0f, 76.0f), glm::vec3(0.388f, 0.002f, -0.922f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF), false);
-    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
+    //m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
 
     // setup game variables
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
