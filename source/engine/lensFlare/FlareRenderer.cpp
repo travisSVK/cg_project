@@ -44,7 +44,15 @@ namespace engine
         glm::vec2 centerPos = flareTexture.screenPosition;
         
         glm::vec2 distanceToCenter = glm::vec2(0.5f, 0.5f) - centerPos;
-        brightness = (glm::length(distanceToCenter / 0.7f)) / 4.0f;
+        if (flareTexture.name.compare("sun") == 0)
+        {
+            brightness = (1 - glm::length(distanceToCenter / 0.7f));
+        }
+        else
+        {
+            brightness = (glm::length(distanceToCenter / 0.7f)) / 4.0f;
+        }
+        
         engine::setUniformSlow(m_flareshader, "brightness", brightness);
         engine::setUniformSlow(m_flareshader, "transform", glm::vec4(centerPos.x, centerPos.y, xScale, yScale));
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

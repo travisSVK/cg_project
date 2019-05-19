@@ -14,7 +14,7 @@ namespace engine
 
     private:
         void loadTextures();
-        engine::Texture loadTexture(const char* path);
+        engine::Texture loadTexture(const char* path, const std::string& name);
         void calcFlarePositions(const glm::vec2& lightToCenter, const glm::vec2& lightCoords);
         glm::vec2 convertToScreenSpace(const glm::vec3& worldPos, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);
 

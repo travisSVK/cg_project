@@ -10,6 +10,7 @@ namespace engine
 		bool valid = false;
 		uint32_t gl_id;
 		std::string filename;
+        std::string name;
 		int width, height, numComponents;
         float scale;
         glm::vec2 screenPosition;

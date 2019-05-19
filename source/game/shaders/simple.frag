@@ -135,7 +135,7 @@ vec3 calculateDirectIllumiunation(vec3 wo, vec3 n, vec3 materialColor)
     //return brdf * dot(n, wi) * li; //vec3(diffuse_term);
 }
 
-vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 materialColor)
+vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 materialColor, float environmentMultiplier)
 {
 
 	///////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ vec3 calculateIndirectIllumination(vec3 wo, vec3 n, vec3 materialColor)
 	if (phi < 0.0f) phi = phi + 2.0f * PI;
     vec2 lookup = vec2(phi / (2.0 * PI), theta / PI);
     
-    vec3 diffuse_term = materialColor * (1.0 / PI) * environment_multiplier * texture(irradianceMap, lookup).rgb;
+    vec3 diffuse_term = materialColor * (1.0 / PI) * environmentMultiplier * texture(irradianceMap, lookup).rgb;
     if(material_reflectivity == 0.0)
     {
         return diffuse_term;
@@ -201,14 +201,14 @@ vec3 calculateColorFromTexture()
     return ambient + diffuse + specular;
 }
 
-vec3 calculateColor(vec3 wo, vec3 n)
+vec3 calculateColor(vec3 wo, vec3 n, float environmentMultiplier)
 {
     vec3 materialColor = (material_color * has_material_color) + (texture(colorMap, texCoord).xyz * (1 - has_material_color));
 	// Direct illumination
 	vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n, materialColor);
 
 	// Indirect illumination
-	vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, materialColor);
+	vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, materialColor, environmentMultiplier);
 
 	///////////////////////////////////////////////////////////////////////////
 	// Add emissive term. If emissive texture exists, sample this term.
@@ -280,21 +280,26 @@ void main()
     }
     else
     {
+        ///////////////////////////////////////////////////////////////////////////
+	    // Add emissive term. If emissive texture exists, sample this term.
+	    ///////////////////////////////////////////////////////////////////////////
+        float environmentMultiplier = environment_multiplier;
+	    vec3 emission_term = material_emission * material_color;
+	    if (has_emission_texture == 1) {
+            vec2 newTexCoord = vec2((is_camera_model * (1.0 - texCoord.x)) + ((1 - is_camera_model) * texCoord.x), texCoord.y);
+            if(is_camera_model == 1)
+            {
+                environmentMultiplier /= 3;
+            }
+	        emission_term = texture(emissiveMap, newTexCoord).xyz;
+	    }
+
         vec3 materialColor = (material_color * has_material_color) + (texture(colorMap, texCoord).xyz * (1 - has_material_color));
 	    // Direct illumination
 	    vec3 direct_illumination_term = calculateDirectIllumiunation(wo, n, materialColor);
 
 	    // Indirect illumination
-	    vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, materialColor);
-
-	    ///////////////////////////////////////////////////////////////////////////
-	    // Add emissive term. If emissive texture exists, sample this term.
-	    ///////////////////////////////////////////////////////////////////////////
-	    vec3 emission_term = material_emission * material_color;
-	    if (has_emission_texture == 1) {
-            vec2 newTexCoord = vec2((is_camera_model * (1.0 - texCoord.x)) + ((1 - is_camera_model) * texCoord.x), texCoord.y);
-	        emission_term = texture(emissiveMap, newTexCoord).xyz;
-	    }
+	    vec3 indirect_illumination_term = calculateIndirectIllumination(wo, n, materialColor, environmentMultiplier);
 
 	    fragmentColor.xyz =
 		    direct_illumination_term +

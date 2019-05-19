@@ -125,8 +125,9 @@ void Game::initialize()
     m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/testText.jpg");
 
     // setup quests
-    m_questManager.addQuest("Take a photo of this beautiful house.", glm::vec3(74.0f, 15.0f, 76), glm::vec3(0.388f, 0.002f, -0.922f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF));
-    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None));
+    m_questManager.addQuest("Take a photo of this beautiful sunset over house.", glm::vec3(137.5f, 15.0f, 109.0f), glm::vec3(-0.437f, 0.06f, -0.897f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), true);
+    m_questManager.addQuest("Take a photo of this beautiful house.", glm::vec3(74.0f, 15.0f, 76.0f), glm::vec3(0.388f, 0.002f, -0.922f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF), false);
+    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
 
     // setup game variables
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
@@ -221,13 +222,11 @@ bool Game::handleEvents()
         m_gameCameraActive = false;
     }
     if (state[SDL_SCANCODE_F] && m_gameCameraActive) {
-        m_questManager.checkQuestCompletion(camera->getPosition(), camera->getDirection(), static_cast<int>(m_currentEffect));
+        m_questManager.checkQuestCompletion(camera->getPosition(), camera->getDirection(), static_cast<int>(m_currentEffect), m_useLensFlare);
     }
     camera->setPosition(cameraPosition);
     glm::mat4 modelMatrix = glm::translate(camera->getPosition() + (camera->getDirection() * 5.0f));
-    //modelMatrix = modelMatrix * gameCameraYaw * gameCameraPitch;
     m_gameCamera->updateCameraMatrix(modelMatrix);
-    // TODO rotate the player bounding box according to camera x,y
 
     return quitEvent;
 }
@@ -326,17 +325,27 @@ void Game::gui()
     
     ImGui::Begin("Objectives");
     ImGui::SetWindowPos(ImVec2(20, 20));
-    ImGui::SetWindowSize(ImVec2(450, (m_questManager.getFinishedQuests().size() * 20) + 120));
+    ImGui::SetWindowSize(ImVec2(450, (m_questManager.getFinishedQuests().size() * 20) + 135));
     // ----------------- Set variables --------------------------
     for (const auto& quest : m_questManager.getFinishedQuests())
     {
-        ImGui::TextColored(ImVec4(0, 1, 0, 1), quest.m_description.c_str());
+        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1), quest.m_description.c_str());
         //ImGui::Text(quest.m_description.c_str());
     }
     ImGui::Text(m_questManager.getCurrentQuestObjective().c_str());
     ImGui::Separator();
-    ImGui::Text("Current position: x = %.3f, y = %.3f, z = %.3f", m_scene->getCamera()->getPosition().x, m_scene->getCamera()->getPosition().y, m_scene->getCamera()->getPosition().z);
-    ImGui::Text("Current direction: x = %.3f, y = %.3f, z = %.3f", m_scene->getCamera()->getDirection().x, m_scene->getCamera()->getDirection().y, m_scene->getCamera()->getDirection().z);
+    ImVec4 positionColor(1.0f, 0.0f, 0.0f, 1);
+    ImVec4 directionColor(1.0f, 0.0f, 0.0f, 1);
+    if (m_questManager.isCurrentPositionWithinRange(m_scene->getCamera()->getPosition()))
+    {
+        positionColor = ImVec4(0.0f, 1.0f, 0.0f, 1);
+    }
+    ImGui::TextColored(positionColor, "Current position: x = %.3f, y = %.3f, z = %.3f", m_scene->getCamera()->getPosition().x, m_scene->getCamera()->getPosition().y, m_scene->getCamera()->getPosition().z);
+    if (m_questManager.isCurrentDirectionWithinRange(m_scene->getCamera()->getDirection()))
+    {
+        directionColor = ImVec4(0.0f, 1.0f, 0.0f, 1);
+    }
+    ImGui::TextColored(directionColor, "Current direction: x = %.3f, y = %.3f, z = %.3f", m_scene->getCamera()->getDirection().x, m_scene->getCamera()->getDirection().y, m_scene->getCamera()->getDirection().z);
     ImGui::End();
 
     ImGui::Begin("Debug + screen effects");
