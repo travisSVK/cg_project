@@ -125,7 +125,7 @@ void Game::initialize()
     m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/testText.jpg");
 
     // setup quests
-    m_questManager.addQuest("Take a photo of this another nice tree.", glm::vec3(0.0f), glm::vec3(0.0f), static_cast<int>(engine::PostFxManager::PostFxTypes::None));
+    m_questManager.addQuest("Take a photo of this beautiful house.", glm::vec3(74.0f, 15.0f, 76), glm::vec3(0.388f, 0.002f, -0.922f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF));
     m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None));
 
     // setup game variables
@@ -326,6 +326,7 @@ void Game::gui()
     
     ImGui::Begin("Objectives");
     ImGui::SetWindowPos(ImVec2(20, 20));
+    ImGui::SetWindowSize(ImVec2(450, (m_questManager.getFinishedQuests().size() * 20) + 120));
     // ----------------- Set variables --------------------------
     for (const auto& quest : m_questManager.getFinishedQuests())
     {
@@ -333,6 +334,9 @@ void Game::gui()
         //ImGui::Text(quest.m_description.c_str());
     }
     ImGui::Text(m_questManager.getCurrentQuestObjective().c_str());
+    ImGui::Separator();
+    ImGui::Text("Current position: x = %.3f, y = %.3f, z = %.3f", m_scene->getCamera()->getPosition().x, m_scene->getCamera()->getPosition().y, m_scene->getCamera()->getPosition().z);
+    ImGui::Text("Current direction: x = %.3f, y = %.3f, z = %.3f", m_scene->getCamera()->getDirection().x, m_scene->getCamera()->getDirection().y, m_scene->getCamera()->getDirection().z);
     ImGui::End();
 
     ImGui::Begin("Debug + screen effects");

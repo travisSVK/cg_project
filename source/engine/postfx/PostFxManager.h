@@ -34,6 +34,7 @@ namespace engine
         //void renderPostFx(PostFxTypes type, engine::FboInfo* source, const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
         void setShaderValues(PostFxTypes type, GLuint program);
         void destroy();
+        static std::string getEffectName(PostFxTypes type);
 
     private:
         std::unordered_map<PostFxTypes, PostFx*> m_effects;

@@ -97,6 +97,62 @@ namespace engine
         }
     }
 
+    std::string PostFxManager::getEffectName(PostFxTypes type)
+    {
+        if (type == PostFxTypes::None)
+        {
+            return "None";
+        }
+        else if (type == PostFxTypes::Sepia)
+        {
+            return "Sepia";
+        }
+        else if (type == PostFxTypes::Mushroom)
+        {
+            return "Mushroom";
+        }
+        else if (type == PostFxTypes::Blur)
+        {
+            return "Blur";
+        }
+        else if (type == PostFxTypes::Grayscale)
+        {
+            return "Grayscale";
+        }
+        else if (type == PostFxTypes::Composition)
+        {
+            return "Composition";
+        }
+        else if (type == PostFxTypes::Mosaic)
+        {
+            return "Mosaic";
+        }
+        else if (type == PostFxTypes::Separable_blur)
+        {
+            return "Separable blur";
+        }
+        else if (type == PostFxTypes::Bloom)
+        {
+            return "Bloom";
+        }
+        else if (type == PostFxTypes::Motion_Blur)
+        {
+            return "Motion blur";
+        }
+        else if (type == PostFxTypes::DOF)
+        {
+            return "Depth of field";
+        }
+        else if (type == PostFxTypes::Pseudo_Lens_Flare)
+        {
+            return "Pseudo lens flare";
+        }
+        else if (type == PostFxTypes::Lens_Flare)
+        {
+            return "Lens flare";
+        }
+    }
+
     void PostFxManager::destroy()
     {
         glDeleteProgram(m_postfxProgram);
