@@ -131,6 +131,7 @@ void Game::initialize()
 
     // setup game variables
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
+    m_currentScreenEffect = engine::PostFxManager::PostFxTypes::None;
     m_useLensFlare = false;
     m_gameCameraActive = false;
     m_showColliders = false;
@@ -279,7 +280,7 @@ void Game::render()
     {
         m_collisionManager->renderColliders(viewMatrix, projectionMatrix);
     }
-    m_postfxManager->renderPostFxToMain(engine::PostFxManager::PostFxTypes::None, m_mainFrameBuffer, projectionMatrix, viewMatrix);
+    m_postfxManager->renderPostFxToMain(m_currentScreenEffect, m_mainFrameBuffer, projectionMatrix, viewMatrix);
     
     /*if (m_useLensFlare)
     {
@@ -352,6 +353,9 @@ void Game::gui()
     ImGui::Begin("Debug + screen effects");
     ImGui::SetWindowPos(ImVec2(1500, 20));
     // ----------------- Set variables --------------------------
+    ImGui::Text("Post-processing effect");
+    ImGui::RadioButton("None", (int*)&m_currentScreenEffect, static_cast<int>(PostFxManager::PostFxTypes::None));
+    ImGui::RadioButton("Motion blur", (int*)&m_currentScreenEffect, static_cast<int>(PostFxManager::PostFxTypes::Motion_Blur));
     ImGui::Text("Show colliders");
     ImGui::RadioButton("On", (int*)&m_showColliders, true);
     ImGui::RadioButton("Off", (int*)&m_showColliders, false);

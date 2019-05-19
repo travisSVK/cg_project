@@ -144,6 +144,7 @@ vec3 motionBlur(vec2 coord)
     //test
     //color = texture(frameBufferTexture, vec2((previousPos.x + 1.0) / 2.0, (previousPos.y + 1.0) / 2.0)).xyz;
     texCoord += velocity;
+    int realNumSamples = numSamples;
     for(int i = 1; i < numSamples; ++i, texCoord += velocity)
     {
         // get offset in range [-0.5, 0.5]:
@@ -153,11 +154,17 @@ vec3 motionBlur(vec2 coord)
         //color += texture(frameBufferTexture, texCoord + offset).xyz;
 
         // Sample the color buffer along the velocity vector.
+        //vec2 texCoordClamped = clamp(texCoord, 0, 1);
+        if(texCoord.x < 0.0 || texCoord.x > 1.0 || texCoord.y < 0.0 || texCoord.y > 1.0)
+        {
+            --realNumSamples;
+            continue;
+        }
         vec3 currentColor = texture(frameBufferTexture, texCoord).xyz;
 //        // Add the current color to our color sum.
         color += currentColor;
     }
-    return color / float(numSamples);
+    return color / float(realNumSamples);
     //return color;
 }
 
@@ -166,6 +173,8 @@ vec3 mosaic(vec2 coord)
     vec2 newCoord = coord / textureSize(frameBufferTexture, 0);
     vec2 flooredCoord = floor(newCoord * 100);
     vec2 finalCoord = flooredCoord / 100;
+//    finalCoord.x = clamp(finalCoord.x, 0.0f, 1.0f);
+//    finalCoord.y = clamp(finalCoord.y, 0.0f, 1.0f);
 	return texture(frameBufferTexture, finalCoord).xyz;
 }
 

@@ -83,7 +83,7 @@ namespace engine
         //engine::setUniformSlow(m_postfxProgram, "filterSize", filterSizes[filterSize - 1]); // TODO add filter size for blur
         engine::setUniformSlow(m_postfxProgram, "viewProjectionInverseMatrix", inverse(projectionMatrix * viewMatrix));
         engine::setUniformSlow(m_postfxProgram, "previousViewProjectionMatrix", m_previousViewProjectionMat);
-        engine::setUniformSlow(m_postfxProgram, "numSamples", 5);
+        engine::setUniformSlow(m_postfxProgram, "numSamples", 4);
         engine::setUniformSlow(m_postfxProgram, "maxCocRadius", 4);
         engine::drawFullScreenQuad();
         m_previousViewProjectionMat = projectionMatrix * viewMatrix;

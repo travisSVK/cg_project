@@ -45,6 +45,7 @@ private:
     int m_width;
     int m_height;
     engine::PostFxManager::PostFxTypes m_currentEffect;
+    engine::PostFxManager::PostFxTypes m_currentScreenEffect;
     bool m_useLensFlare;
     bool m_showTeselatedTerrain;
     bool m_showColliders;
