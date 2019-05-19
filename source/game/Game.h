@@ -46,5 +46,6 @@ private:
     int m_height;
     engine::PostFxManager::PostFxTypes m_currentEffect;
     bool m_useLensFlare;
+    bool m_showTeselatedTerrain;
     bool m_showColliders;
 };

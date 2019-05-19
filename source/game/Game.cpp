@@ -134,6 +134,7 @@ void Game::initialize()
     m_useLensFlare = false;
     m_gameCameraActive = false;
     m_showColliders = false;
+    m_showTeselatedTerrain = false;
 
     initGL();
 }
@@ -256,7 +257,7 @@ void Game::render()
     // render terrain
     m_postfxManager->setShaderValues(m_currentEffect, m_heightfield.useProgram());
     m_heightfield.useProgram();
-    m_heightfield.render(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier(), m_scene->getSun());
+    m_heightfield.render(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier(), m_scene->getSun(), m_showTeselatedTerrain);
 
     // render scene
     glUseProgram(m_scene->getSceneProgram());
@@ -354,6 +355,9 @@ void Game::gui()
     ImGui::Text("Show colliders");
     ImGui::RadioButton("On", (int*)&m_showColliders, true);
     ImGui::RadioButton("Off", (int*)&m_showColliders, false);
+    ImGui::Text("Show terrain tesselation");
+    ImGui::RadioButton("Tes On", (int*)&m_showTeselatedTerrain, true);
+    ImGui::RadioButton("Tes Off", (int*)&m_showTeselatedTerrain, false);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
 

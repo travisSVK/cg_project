@@ -154,7 +154,7 @@ namespace engine
         glPatchParameteri(GL_PATCH_VERTICES, 3);
     }
 
-    void HeightField::render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraWorldPos, float environmentMultiplier, Sun* sun)
+    void HeightField::render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraWorldPos, float environmentMultiplier, Sun* sun, bool showTesselated)
     {
         if (m_vao == UINT32_MAX) {
             std::cout << "No vertex array is generated, cannot draw anything.\n";
@@ -177,13 +177,19 @@ namespace engine
         engine::setUniformSlow(m_shader, "normalMatrix", inverse(transpose(viewMatrix * modelMatrix)));
         engine::setUniformSlow(m_shader, "has_material_color", 0);
         engine::setUniformSlow(m_shader, "has_texture", 0);
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        if (showTesselated)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
         glBindVertexArray(m_vao);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m_texid_hf);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, m_texid_diffuse);
         glDrawElements(GL_PATCHES, m_numIndices, GL_UNSIGNED_INT, 0);
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        if (showTesselated)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
     }
 }
