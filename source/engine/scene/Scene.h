@@ -13,7 +13,7 @@ namespace engine
     public:
 
         Scene(const glm::vec3& cameraPosition, const glm::vec3& cameraDirection);
-        void renderScene(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, float environmentMultiplier);
+        void renderScene(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, float environmentMultiplier, bool showNormalMap);
         void renderSun(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
         void addModel(Model* model);
         void addModel(Model* model, const glm::mat4& modelMatrix);

@@ -112,7 +112,7 @@ namespace engine
 	Model * loadModelFromOBJ(std::string filename);
 	void saveModelToOBJ(Model * model, std::string filename);
 	void freeModel(Model * model);
-	void render(const Model * model, const bool submitMaterials = true); 
+	void render(const Model * model, bool showNormalMap, const bool submitMaterials = true);
     void renderWithDiffOptionForMesh(const Model * model, const std::string& meshName, const std::function<void()>& setFunction, const std::function<void()>& resetFunction, const bool submitMaterials = true);
     void saveModelBinary(Model * model, std::string filename);
     Model * loadModelBinary(std::string filename);

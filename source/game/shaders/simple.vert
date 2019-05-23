@@ -26,6 +26,8 @@ out vec3 viewSpacePosition;
 out float worldZ;
 
 uniform vec3 viewSpaceLightPosition;
+uniform vec3 cameraPos;
+uniform vec3 lightPos;
 
 out VS_OUT {
     vec3 FragPos;
@@ -37,22 +39,30 @@ out VS_OUT {
 
 void main() 
 {
-	gl_Position = modelViewProjectionMatrix * vec4(position,1);
 	viewSpaceNormal = (normalMatrix * vec4(normalIn, 0.0)).xyz;
 	viewSpacePosition = (modelViewMatrix * vec4(position, 1)).xyz;
 	texCoord = texCoordIn;
     //aNormal = normalIn;
     worldZ = vec4(modelMatrix * vec4(position,1)).z;
 
-    vec3 T = normalize(vec3(modelMatrix * vec4(aTangent, 0.0)));
-    vec3 B = normalize(vec3(modelMatrix * vec4(aBitTangent, 0.0)));
-    vec3 N = normalize(vec3(modelMatrix * vec4(normalIn, 0.0)));
-
-    vs_out.FragPos = position;
+//    vec3 T = normalize(vec3(modelMatrix * vec4(aTangent, 0.0)));
+//    vec3 B = normalize(vec3(modelMatrix * vec4(aBitTangent, 0.0)));
+//    vec3 N = normalize(vec3(modelMatrix * vec4(normalIn, 0.0)));
+    vs_out.FragPos = vec3(modelMatrix * vec4 (position, 1.0));
     vs_out.TexCoords = texCoord;
+    
+    mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
+    vec3 T = normalize(vec3(normalMatrix * aTangent));
+    vec3 N = normalize(vec3(normalMatrix * normalIn));
+
+    T = normalize(T - dot(T,N) * N);
+    vec3 B = cross(N,T);
+
     mat3 TBN = transpose(mat3(T,B,N));
-    vs_out.TangentLightPos = TBN * viewSpaceLightPosition;
-    vs_out.TangentViewPos = TBN * viewSpacePosition;
-    vs_out.TangentFragPos = TBN * vec3(modelMatrix * vec4(position, 0.0));
+    vs_out.TangentLightPos = TBN * lightPos;
+    vs_out.TangentViewPos = TBN * cameraPos;
+    vs_out.TangentFragPos = TBN * vs_out.FragPos;
+
+	gl_Position = modelViewProjectionMatrix * vec4(position,1);
     //worldZ = position.z;
 }

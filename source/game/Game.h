@@ -50,4 +50,5 @@ private:
     bool m_useLensFlare;
     bool m_showTeselatedTerrain;
     bool m_showColliders;
+    bool m_showNormalMap;
 };

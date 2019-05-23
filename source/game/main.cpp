@@ -235,7 +235,7 @@ void drawScene(const mat4 &view, const mat4 &projection)
 	engine::setUniformSlow(shaderProgram, "normalMatrix", inverse(transpose(view * modelMatrix)));
     engine::setUniformSlow(shaderProgram, "modelMatrix", modelMatrix);
 	
-	engine::render(landingpadModel);
+	engine::render(landingpadModel, true);
 
 	// Fighter
 	//mat4 fighterModelMatrix = translate(15.0f * worldUp) * rotate(currentTime * -float(M_PI) / 4.0f, worldUp);
@@ -244,7 +244,7 @@ void drawScene(const mat4 &view, const mat4 &projection)
 	engine::setUniformSlow(shaderProgram, "modelViewMatrix", view * fighterModelMatrix);
 	engine::setUniformSlow(shaderProgram, "normalMatrix", inverse(transpose(view * fighterModelMatrix)));
     engine::setUniformSlow(shaderProgram, "modelMatrix", fighterModelMatrix);
-	engine::render(fighterModel);
+	engine::render(fighterModel, true);
 }
 
 void debugDrawLight(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix, const glm::vec3 &worldSpaceLightPos)
@@ -252,7 +252,7 @@ void debugDrawLight(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatr
     mat4 modelMatrix = glm::translate(worldSpaceLightPos);
     glUseProgram(shaderProgram);
     engine::setUniformSlow(shaderProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * modelMatrix);
-    engine::render(sphereModel);
+    engine::render(sphereModel, false);
 }
 
 void separableBlur(GLuint hShader, GLuint vShader, const engine::FboInfo &source, engine::FboInfo &downsampledFbo, engine::FboInfo &hBlurFbo, engine::FboInfo &vBlurFbo)

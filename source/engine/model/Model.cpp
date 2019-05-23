@@ -327,6 +327,10 @@ namespace engine
             //saveModelBinary(model, directory + filename);
         }
         model->m_loaded = true;
+
+        //================================================
+        //===== TANGENT & BITANGENT CALCULATION ==========
+        //================================================
         for (int i = 0; i < model->m_positions.size(); i += 3)
         {
             glm::vec3 pos1 = model->m_positions.at(i);
@@ -338,7 +342,7 @@ namespace engine
             glm::vec2 uv2 = model->m_texture_coordinates.at(i + 1);
             glm::vec2 uv3 = model->m_texture_coordinates.at(i + 2);
 
-            glm::vec3 tangent1, bitangent1;
+            glm::vec3 tangent, bitangent;
 
             //calculate triangle edge and delta UV coords 
             glm::vec3 edge1 = pos2 - pos1;
@@ -357,19 +361,19 @@ namespace engine
             bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
             bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
             bitangent1 = glm::normalize(bitangent1);*/
-            tangent1 = (edge1 * deltaUV2.y - edge2 * deltaUV1.y) * f;
-            bitangent1 = (edge2 * deltaUV1.x - edge1 * deltaUV2.x) * f;
+            tangent = (edge1 * deltaUV2.y - edge2 * deltaUV1.y) * f;
+            bitangent = (edge2 * deltaUV1.x - edge1 * deltaUV2.x) * f;
 
-            tangent1 = glm::normalize(tangent1);
-            bitangent1 = glm::normalize(bitangent1);
+            tangent = glm::normalize(tangent);
+            bitangent = glm::normalize(bitangent);
 
 
-            model->m_tangents.push_back(tangent1);
-            model->m_tangents.push_back(tangent1);
-            model->m_tangents.push_back(tangent1);
-            model->m_bitTangents.push_back(bitangent1);
-            model->m_bitTangents.push_back(bitangent1);
-            model->m_bitTangents.push_back(bitangent1);
+            model->m_tangents.push_back(tangent);
+            model->m_tangents.push_back(tangent);
+            model->m_tangents.push_back(tangent);
+            model->m_bitTangents.push_back(bitangent);
+            model->m_bitTangents.push_back(bitangent);
+            model->m_bitTangents.push_back(bitangent);
 
         }
 		///////////////////////////////////////////////////////////////////////
@@ -807,7 +811,7 @@ namespace engine
 	///////////////////////////////////////////////////////////////////////
 	// Loop through all Meshes in the Model and render them
 	///////////////////////////////////////////////////////////////////////
-	void render(const Model * model, const bool submitMaterials)
+	void render(const Model * model, bool showNormalMap, const bool submitMaterials)
 	{
 		glBindVertexArray(model->m_vaob);
 		for (auto & mesh : model->m_meshes)
@@ -850,6 +854,14 @@ namespace engine
                     glUniform1i(glGetUniformLocation(current_program, "normalMap"), 11);
 				    glUniform1i(glGetUniformLocation(current_program, "has_texture"), 1); //FIXME: Compatibility with old shading model of lab3.
                     glUniform1i(glGetUniformLocation(current_program, "has_material_color"), 0);
+                    if (showNormalMap)
+                    {
+                        glUniform1i(glGetUniformLocation(current_program, "shows_normal_map"), 1);
+                    }
+                    else
+                    {
+                        glUniform1i(glGetUniformLocation(current_program, "shows_normal_map"), 0);
+                    }
                 }
                 else 
                 {

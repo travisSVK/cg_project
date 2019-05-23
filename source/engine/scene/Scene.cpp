@@ -36,7 +36,7 @@ namespace engine
         m_models.push_back(model);
     }
 
-    void Scene::renderScene(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, float environmentMultiplier)
+    void Scene::renderScene(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, float environmentMultiplier, bool showNormalMap)
     {
         engine::setUniformSlow(m_sceneProgram, "directional_light_color", m_sun->getColor());
         engine::setUniformSlow(m_sceneProgram, "directional_light_intensity_multiplier", m_sun->getIntensityMultiplier());
@@ -45,13 +45,16 @@ namespace engine
         engine::setUniformSlow(m_sceneProgram, "viewSpaceLightPosition", glm::vec3(newViewMatrix * glm::vec4(m_sun->getPosition(), 1.0f)));
         engine::setUniformSlow(m_sceneProgram, "environment_multiplier", environmentMultiplier);
         engine::setUniformSlow(m_sceneProgram, "viewInverse", glm::inverse(viewMatrix));
+        engine::setUniformSlow(m_sceneProgram, "cameraPos", m_camera->getPosition());
+        engine::setUniformSlow(m_sceneProgram, "lightPos", m_sun->getPosition());
+        
         for (auto model : m_models)
         {
             engine::setUniformSlow(m_sceneProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * model->getModelMatrix());
             engine::setUniformSlow(m_sceneProgram, "modelViewMatrix", viewMatrix * model->getModelMatrix());
             engine::setUniformSlow(m_sceneProgram, "normalMatrix", glm::inverse(glm::transpose(viewMatrix * model->getModelMatrix())));
             engine::setUniformSlow(m_sceneProgram, "modelMatrix", model->getModelMatrix());
-            engine::render(model);
+            engine::render(model, showNormalMap);
         }
     }
 

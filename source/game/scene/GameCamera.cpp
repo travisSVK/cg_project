@@ -45,7 +45,7 @@ void GameCamera::renderGameCamera(GLuint program, const glm::mat4& viewMatrix, c
     //std::function<void()> set = [this, program, viewMatrix, projectionMatrix]() {setParametersForCameraDisplay(program, viewMatrix, projectionMatrix); };
     //std::function<void()> reset = [this, program, viewMatrix, projectionMatrix]() {resetParametersForCameraDisplay(program, viewMatrix, projectionMatrix); };
     //engine::renderWithDiffOptionForMesh(m_cameraModel, "None", set, reset);
-    engine::render(m_cameraModel);
+    engine::render(m_cameraModel, false);
 }
 
 void GameCamera::setParametersForCameraDisplay(GLuint program, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix)

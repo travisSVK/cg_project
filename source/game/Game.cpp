@@ -242,15 +242,25 @@ void Game::initialize()
     m_modelManager->createModel("../scenes/helipad.obj", static_cast<unsigned int>(GameModels::HeliPadModel), modelMatrix);
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);
 
-     
+    modelMatrix = glm::translate(glm::vec3(110.0f,15.0f, 70.0f));
+    m_modelManager->createModel("../scenes/testDice.obj", static_cast<unsigned int>(GameModels::HeliPadModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);
+
     //setup terrain
-    m_heightfield.generateMesh(64);
+    m_heightfield.generateMesh(128);
     m_heightfield.loadHeightField("../scenes/nlsFinland/terrainHeightmap.png");
     m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/testText.jpg");
 
     // setup quests
-    m_questManager.addQuest("Take a photo of this beautiful sunset over house.", glm::vec3(137.5f, 15.0f, 109.0f), glm::vec3(-0.437f, 0.06f, -0.897f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), true);
-    m_questManager.addQuest("Take a photo of this beautiful house.", glm::vec3(74.0f, 15.0f, 76.0f), glm::vec3(0.388f, 0.002f, -0.922f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF), false);
+    m_questManager.addQuest("Take a photo of this amazing helipad.", glm::vec3(120.5f, 15.0f, 65.7f), glm::vec3(-0.805f, -0.464f, 0.370f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
+    m_questManager.addQuest("Take a photo of this beautiful lovely gentleman.", glm::vec3(131.0f, 15.0f, 87.0f), glm::vec3(0.975f, -0.111f, 0.190f), static_cast<int>(engine::PostFxManager::PostFxTypes::Sepia), false);
+    m_questManager.addQuest("Take a photo of this beautiful house from this angle.", glm::vec3(90.0f, 15.0f, 49.5f), glm::vec3(0.676f, 0.349f, -0.649f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF), false);
+    m_questManager.addQuest("Take a photo of this beautiful sunset over the house in Greyscale.", glm::vec3(113.5f, 15.0f, 91.5f), glm::vec3(-0.458f, 0.173f, -0.872f), static_cast<int>(engine::PostFxManager::PostFxTypes::Grayscale), true);
+    m_questManager.addQuest("Take a photo of this beautiful sunset over the house.", glm::vec3(113.5f, 15.0f, 91.5f), glm::vec3(-0.458f, 0.173f, -0.872f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF), true);
+    m_questManager.addQuest("Take a photo of this lovely view.", glm::vec3(75.0f, 15.0f, 58), glm::vec3(0.729f, 0.001f, 0.685f), static_cast<int>(engine::PostFxManager::PostFxTypes::Bloom), false);
+    m_questManager.addQuest("Take a photo of this little bench pixelated.", glm::vec3(55.5f, 15.0f, 24.5f), glm::vec3(-0.873f, -0.110f, 0.46f), static_cast<int>(engine::PostFxManager::PostFxTypes::Mosaic), false);
+    m_questManager.addQuest("Take a photo of this little bench.", glm::vec3(55.5f, 15.0f, 24.5f), glm::vec3(-0.873f, -0.110f, 0.46f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
+    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(102.0f, 15.0f, 88.0f), glm::vec3(0.473f, 0.194f, 0.859f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     //m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
 
     // setup game variables
@@ -400,7 +410,7 @@ void Game::render()
     // render scene
     glUseProgram(m_scene->getSceneProgram());
     m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
-    m_scene->renderScene(projectionMatrix, viewMatrix, m_environmentManager->getEnvironmentMultiplier());
+    m_scene->renderScene(projectionMatrix, viewMatrix, m_environmentManager->getEnvironmentMultiplier(), m_showNormalMap);
     
     if (m_gameCameraActive)
     {
@@ -504,6 +514,9 @@ void Game::gui()
     ImGui::Text("Show terrain tesselation");
     ImGui::RadioButton("Tes On", (int*)&m_showTeselatedTerrain, true);
     ImGui::RadioButton("Tes Off", (int*)&m_showTeselatedTerrain, false);
+    ImGui::Text("Show with Normal Maps");
+    ImGui::RadioButton("NormMap On", (int*)&m_showNormalMap, true);
+    ImGui::RadioButton("NormMap Off", (int*)&m_showNormalMap, false);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
 
