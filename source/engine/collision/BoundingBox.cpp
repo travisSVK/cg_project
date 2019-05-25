@@ -102,4 +102,11 @@ namespace engine
         edges.push_back(vertices[2] - vertices[1]);
         edges.push_back(vertices[4] - vertices[0]);
     }
+
+    void BoundingBox::destroy()
+    {
+        glDeleteBuffers(1, &m_positionBuffer);
+        glDeleteBuffers(1, &m_indexBuffer);
+        glDeleteVertexArrays(1, &m_vao);
+    }
 }

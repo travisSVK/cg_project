@@ -47,5 +47,17 @@ namespace engine
     void CollisionManager::destroy()
     {
         // TODO destroy colliders and collision strategy
+        for (auto staticCollider : m_staticColliders)
+        {
+            staticCollider->destroy();
+            delete staticCollider;
+        }
+
+        for (auto dynamicCollider : m_dynamicColliders)
+        {
+            dynamicCollider->destroy();
+            delete dynamicCollider;
+        }
+        delete m_collisionDetectionStrategy;
     }
 }

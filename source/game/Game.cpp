@@ -443,10 +443,6 @@ void Game::render()
         m_flashTime -= 0.01f;
     }
     
-    /*if (m_useLensFlare)
-    {
-        m_flareManager->render(viewMatrix, projectionMatrix, m_scene->getSun()->getPosition());
-    }*/
     CHECK_GL_ERROR();
 
     gui();
@@ -468,20 +464,36 @@ void Game::gui()
         ImGui::RadioButton("None", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::None));
         ImGui::RadioButton("Sepia", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Sepia));
         ImGui::RadioButton("Mushroom", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Mushroom));
-        ImGui::RadioButton("Blur", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Blur));
         ImGui::SameLine();
         //ImGui::SliderInt("Filter size", &filterSize, 1, 12); // TODO filter size for bloom
         ImGui::RadioButton("Grayscale", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Grayscale));
-        ImGui::RadioButton("All of the above", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Composition));
         ImGui::RadioButton("Mosaic", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Mosaic));
         ImGui::RadioButton("Separable Blur", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Separable_blur));
         ImGui::RadioButton("Bloom", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Bloom));
         ImGui::RadioButton("Motion blur", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Motion_Blur));
         ImGui::RadioButton("DOF", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::DOF));
-        ImGui::RadioButton("Pseudo Lens flare", (int*)&m_currentEffect, static_cast<int>(PostFxManager::PostFxTypes::Pseudo_Lens_Flare));
-        ImGui::Text("Lens flare");
-        ImGui::RadioButton("Lens flare on", (int*)&m_useLensFlare, true);
-        ImGui::RadioButton("Lens flare off", (int*)&m_useLensFlare, false);
+        // lens flare button
+        if (m_useLensFlare == true)
+        {
+            ImGui::PushID(" Show lens flare ");
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 1.0f, 0.0f, 1));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 1.0f, 0.0f, 1));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 1.0f, 0.0f, 1));
+            ImGui::Button(" Show lens flare ");
+            if (ImGui::IsItemClicked(0))
+            {
+                m_useLensFlare = !m_useLensFlare;
+            }
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+        }
+        else
+        {
+            if (ImGui::Button(" Show lens flare "))
+            {
+                m_useLensFlare = true;
+            }
+        }
         // ----------------------------------------------------------
         ImGui::End();
     }
@@ -517,15 +529,72 @@ void Game::gui()
     ImGui::Text("Post-processing effect");
     ImGui::RadioButton("None", (int*)&m_currentScreenEffect, static_cast<int>(PostFxManager::PostFxTypes::None));
     ImGui::RadioButton("Motion blur", (int*)&m_currentScreenEffect, static_cast<int>(PostFxManager::PostFxTypes::Motion_Blur));
-    ImGui::Text("Show colliders");
-    ImGui::RadioButton("On", (int*)&m_showColliders, true);
-    ImGui::RadioButton("Off", (int*)&m_showColliders, false);
-    ImGui::Text("Show terrain tesselation");
-    ImGui::RadioButton("Tes On", (int*)&m_showTeselatedTerrain, true);
-    ImGui::RadioButton("Tes Off", (int*)&m_showTeselatedTerrain, false);
-    ImGui::Text("Show with Normal Maps");
-    ImGui::RadioButton("NormMap On", (int*)&m_showNormalMap, true);
-    ImGui::RadioButton("NormMap Off", (int*)&m_showNormalMap, false);
+    // show colliders button
+    if (m_showColliders == true)
+    {
+        ImGui::PushID(" Show colliders ");
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::Button(" Show colliders ");
+        if (ImGui::IsItemClicked(0))
+        {
+            m_showColliders = !m_showColliders;
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+    }
+    else
+    {
+        if (ImGui::Button(" Show colliders "))
+        {
+            m_showColliders = true;
+        }
+    }
+    // terrain tesselation button
+    if (m_showTeselatedTerrain == true)
+    {
+        ImGui::PushID(" Show terrain tesselation ");
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::Button(" Show terrain tesselation ");
+        if (ImGui::IsItemClicked(0))
+        {
+            m_showTeselatedTerrain = !m_showTeselatedTerrain;
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+    }
+    else
+    {
+        if (ImGui::Button(" Show terrain tesselation "))
+        {
+            m_showTeselatedTerrain = true;
+        }
+    }
+    // normal maps button
+    if (m_showNormalMap == true)
+    {
+        ImGui::PushID(" Show with Normal Maps ");
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 1.0f, 0.0f, 1));
+        ImGui::Button(" Show with Normal Maps ");
+        if (ImGui::IsItemClicked(0))
+        {
+            m_showNormalMap = !m_showNormalMap;
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
+    }
+    else
+    {
+        if (ImGui::Button(" Show with Normal Maps "))
+        {
+            m_showNormalMap = true;
+        }
+    }
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
 
@@ -535,12 +604,15 @@ void Game::gui()
 
 void Game::destroy()
 {
+    m_collisionManager->destroy();
+    m_heightfield.destroy();
     m_modelManager->destroy();
     m_flareManager->destroy();
     m_environmentManager->destroy();
     m_postfxManager->destroy();
     m_mainFrameBuffer->destroy();
     m_scene->destroy();
+    delete m_collisionManager;
     delete m_modelManager;
     delete m_flareManager;
     delete m_environmentManager;

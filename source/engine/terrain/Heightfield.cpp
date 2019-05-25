@@ -192,4 +192,15 @@ namespace engine
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
     }
+
+    void HeightField::destroy()
+    {
+        glDeleteTextures(1, &m_texid_hf);
+        glDeleteTextures(1, &m_texid_diffuse);
+        glDeleteBuffers(1, &m_positionBuffer);
+        glDeleteBuffers(1, &m_uvBuffer);
+        glDeleteBuffers(1, &m_indexBuffer);
+        glDeleteVertexArrays(1, &m_vao);
+        glDeleteProgram(m_shader);
+    }
 }

@@ -22,7 +22,7 @@ namespace engine
 
         // render height map
         void render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, const glm::vec3& cameraWorldPos, float environmentMultiplier, Sun* sun, bool showTesselated);
-
+        void destroy();
         GLuint useProgram();
 
     private:

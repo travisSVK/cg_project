@@ -19,6 +19,7 @@ namespace engine
         virtual void notifyCollision(ColliderType other) = 0;
         virtual void getColliderInfo(std::vector<glm::vec3>& edges, std::vector<glm::vec3>& vertices) = 0;
         virtual void render(const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix, GLuint program) = 0;
+        virtual void destroy() = 0;
         
         void setType(ColliderType type);
         ColliderType getType();
