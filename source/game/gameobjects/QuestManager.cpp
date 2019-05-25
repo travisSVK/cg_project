@@ -51,6 +51,10 @@ bool QuestManager::checkQuestCompletion(const glm::vec3& position, const glm::ve
             (q.m_expectedEffect == effect) && (q.m_lensFlareOn == lensFlareOn))
         {
             m_quests.at(m_quests.size() - 1).m_completed = true;
+            if (m_finishedQuests.empty())
+            {
+                firstQuestComplete = true;
+            }
             return true;
         }
     }
@@ -94,4 +98,14 @@ void QuestManager::setQuestComplete()
         m_finishedQuests.push_back(m_quests.back());
         m_quests.pop_back();
     }
+}
+
+void QuestManager::setFirstQuestComplete(bool isComplete)
+{
+    firstQuestComplete = isComplete;
+}
+
+bool QuestManager::getFirstQuestComplete()
+{
+    return firstQuestComplete;
 }

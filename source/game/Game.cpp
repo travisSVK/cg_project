@@ -54,7 +54,7 @@ void Game::initialize()
     //m_environmentManager->createEnvironmentTexture("../scenes/ghost_color_gradient.psd", engine::EnvironmentManager::EnvironmentTextureType::GradientTexture);
 
     //setup scene
-    m_scene = new engine::Scene(glm::vec3(90.0f, 15.0f, 80.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)));
+    m_scene = new engine::Scene(glm::vec3(112.0f, 15.0f, 82.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(0.14f, -0.047f, 0.989f)));
     // Load some models.
     glm::mat4 modelMatrix = glm::translate(60.0f * m_scene->getCamera()->getWorldUp());
     //m_modelManager->createModel("../scenes/NewShip.obj", static_cast<unsigned int>(GameModels::FighterModel), modelMatrix);
@@ -242,16 +242,21 @@ void Game::initialize()
     m_modelManager->createModel("../scenes/helipad.obj", static_cast<unsigned int>(GameModels::HeliPadModel), modelMatrix);
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);
 
-    modelMatrix = glm::translate(glm::vec3(110.0f,15.0f, 70.0f));
+    /*modelMatrix = glm::translate(glm::vec3(110.0f,15.0f, 70.0f));
     m_modelManager->createModel("../scenes/testDice.obj", static_cast<unsigned int>(GameModels::HeliPadModel), modelMatrix);
-    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);*/
+
+    modelMatrix = glm::translate(glm::vec3(110.0f, 15.0f, 70.0f));
+    m_modelManager->createModel("../scenes/startScreen.obj", static_cast<unsigned int>(GameModels::StartScreenModel), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::StartScreenModel)), modelMatrix);
 
     //setup terrain
-    m_heightfield.generateMesh(128);
+    m_heightfield.generateMesh(512);
     m_heightfield.loadHeightField("../scenes/nlsFinland/terrainHeightmap.png");
     m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/testText.jpg");
 
     // setup quests
+    m_questManager.setFirstQuestComplete(false);
     m_questManager.addQuest("Take a photo of this amazing helipad.", glm::vec3(120.5f, 15.0f, 65.7f), glm::vec3(-0.805f, -0.464f, 0.370f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     m_questManager.addQuest("Take a photo of this beautiful lovely gentleman.", glm::vec3(131.0f, 15.0f, 87.0f), glm::vec3(0.975f, -0.111f, 0.190f), static_cast<int>(engine::PostFxManager::PostFxTypes::Sepia), false);
     m_questManager.addQuest("Take a photo of this beautiful house from this angle.", glm::vec3(90.0f, 15.0f, 49.5f), glm::vec3(0.676f, 0.349f, -0.649f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF), false);
@@ -261,6 +266,7 @@ void Game::initialize()
     m_questManager.addQuest("Take a photo of this little bench pixelated.", glm::vec3(55.5f, 15.0f, 24.5f), glm::vec3(-0.873f, -0.110f, 0.46f), static_cast<int>(engine::PostFxManager::PostFxTypes::Mosaic), false);
     m_questManager.addQuest("Take a photo of this little bench.", glm::vec3(55.5f, 15.0f, 24.5f), glm::vec3(-0.873f, -0.110f, 0.46f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(102.0f, 15.0f, 88.0f), glm::vec3(0.473f, 0.194f, 0.859f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
+    m_questManager.addQuest("Take a photo of this amazing starting logo.", glm::vec3(112.0f, 15.0f, 82.0f), glm::vec3(-0.14f, 0.047f, -0.989f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     //m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
 
     // setup game variables
@@ -313,7 +319,7 @@ bool Game::handleEvents()
         {
             quitEvent = true;
         }
-        if (event.type == SDL_MOUSEMOTION && !ImGui::IsMouseHoveringAnyWindow()) 
+        if (event.type == SDL_MOUSEMOTION && !ImGui::IsMouseHoveringAnyWindow() && m_questManager.getFirstQuestComplete()) 
         {
             // More info at https://wiki.libsdl.org/SDL_MouseMotionEvent
             static int prev_xcoord = event.motion.x;
@@ -340,35 +346,38 @@ bool Game::handleEvents()
     const uint8_t *state = SDL_GetKeyboardState(nullptr);
     glm::vec3 cameraRight = glm::cross(camera->getDirection(), camera->getWorldUp());
     glm::vec3 cameraPosition = camera->getPosition();
-    if (state[SDL_SCANCODE_W]) 
+    if (m_questManager.getFirstQuestComplete())
     {
-        cameraPosition += camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
-        //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
+        if (state[SDL_SCANCODE_W])
+        {
+            cameraPosition += camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
+            //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
+        }
+        if (state[SDL_SCANCODE_S])
+        {
+            cameraPosition -= camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
+            //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
+        }
+        if (state[SDL_SCANCODE_A])
+        {
+            cameraPosition -= camera->getCameraSpeed() * cameraRight;
+            //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * cameraRight));
+        }
+        if (state[SDL_SCANCODE_D])
+        {
+            cameraPosition += camera->getCameraSpeed() * cameraRight;
+            //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * cameraRight));
+        }        
     }
-    if (state[SDL_SCANCODE_S]) 
-    {
-        cameraPosition -= camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
-        //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
-    }
-    if (state[SDL_SCANCODE_A]) 
-    {
-        cameraPosition -= camera->getCameraSpeed() * cameraRight;
-        //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * cameraRight));
-    }
-    if (state[SDL_SCANCODE_D]) 
-    {
-        cameraPosition += camera->getCameraSpeed() * cameraRight;
-        //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * cameraRight));
-    }
-    if (state[SDL_SCANCODE_E]) 
+    if (state[SDL_SCANCODE_E])
     {
         m_gameCameraActive = true;
     }
-    if (state[SDL_SCANCODE_Q]) 
+    if (state[SDL_SCANCODE_Q])
     {
         m_gameCameraActive = false;
     }
-    if (state[SDL_SCANCODE_F] && m_gameCameraActive && 
+    if (state[SDL_SCANCODE_F] && m_gameCameraActive &&
         m_questManager.checkQuestCompletion(camera->getPosition(), camera->getDirection(), static_cast<int>(m_currentEffect), m_useLensFlare))
     {
         m_flashTime = 1.0f;
