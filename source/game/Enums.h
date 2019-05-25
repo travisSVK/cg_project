@@ -11,5 +11,6 @@ enum class GameModels : unsigned int
     VictoryGuyModel = 6,
     HeliPadModel = 7,
     StartScreenModel = 8,
-    HelicopModel = 9
+    HelicopModel = 9,
+    HelicopterBladesModel = 10
 };

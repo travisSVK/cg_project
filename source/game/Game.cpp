@@ -54,8 +54,11 @@ void Game::initialize()
     //setup scene
     m_scene = new engine::Scene(glm::vec3(112.0f, 15.0f, 82.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(0.14f, -0.047f, 0.989f)));
     // Load some models.
-    glm::mat4 modelMatrix = glm::translate(glm::vec3(110.0f, 30.0f, 70.0f));
-    m_modelManager->createModel("../scenes/NewShip.obj", static_cast<unsigned int>(GameModels::HelicopModel), modelMatrix);
+    glm::mat4 modelMatrix = glm::translate(glm::vec3(110.0f, 100.0f, 70.0f));
+    m_modelManager->createModel("../scenes/helicopter.obj", static_cast<unsigned int>(GameModels::HelicopModel), modelMatrix);
+
+    m_modelManager->createModel("../scenes/helicopterBlades.obj", static_cast<unsigned int>(GameModels::HelicopterBladesModel), modelMatrix);
+
     
     modelMatrix = glm::translate(glm::vec3(-70.0f, 15.0f, 70.0f));
     m_modelManager->createModel("../scenes/photocameraRotated.obj", static_cast<unsigned int>(GameModels::CameraModel), modelMatrix);
@@ -248,6 +251,8 @@ void Game::initialize()
     m_modelManager->createModel("../scenes/startScreen.obj", static_cast<unsigned int>(GameModels::StartScreenModel), modelMatrix);
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::StartScreenModel)), modelMatrix);
 
+
+
     //setup terrain
     m_heightfield.generateMesh(512);
     m_heightfield.loadHeightField("../scenes/nlsFinland/terrainHeightmap.png");
@@ -255,7 +260,7 @@ void Game::initialize()
 
     // setup quests
     m_questManager.setFirstQuestComplete(false);
-    /*m_questManager.addQuest("Take a photo of this amazing helipad.", glm::vec3(120.5f, 15.0f, 65.7f), glm::vec3(-0.805f, -0.464f, 0.370f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
+    m_questManager.addQuest("Take a photo of this amazing helipad.", glm::vec3(120.5f, 15.0f, 65.7f), glm::vec3(-0.805f, -0.464f, 0.370f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     m_questManager.addQuest("Take a photo of this beautiful lovely gentleman.", glm::vec3(131.0f, 15.0f, 87.0f), glm::vec3(0.975f, -0.111f, 0.190f), static_cast<int>(engine::PostFxManager::PostFxTypes::Sepia), false);
     m_questManager.addQuest("Take a photo of this beautiful house from this angle.", glm::vec3(90.0f, 15.0f, 49.5f), glm::vec3(0.676f, 0.349f, -0.649f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF), false);
     m_questManager.addQuest("Take a photo of this beautiful sunset over the house in Greyscale.", glm::vec3(113.5f, 15.0f, 91.5f), glm::vec3(-0.458f, 0.173f, -0.872f), static_cast<int>(engine::PostFxManager::PostFxTypes::Grayscale), true);
@@ -263,12 +268,14 @@ void Game::initialize()
     m_questManager.addQuest("Take a photo of this lovely view.", glm::vec3(75.0f, 15.0f, 58), glm::vec3(0.729f, 0.001f, 0.685f), static_cast<int>(engine::PostFxManager::PostFxTypes::Bloom), false);
     m_questManager.addQuest("Take a photo of this little bench pixelated.", glm::vec3(55.5f, 15.0f, 24.5f), glm::vec3(-0.873f, -0.110f, 0.46f), static_cast<int>(engine::PostFxManager::PostFxTypes::Mosaic), false);
     m_questManager.addQuest("Take a photo of this little bench.", glm::vec3(55.5f, 15.0f, 24.5f), glm::vec3(-0.873f, -0.110f, 0.46f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
-    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(102.0f, 15.0f, 88.0f), glm::vec3(0.473f, 0.194f, 0.859f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);*/
+    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(102.0f, 15.0f, 88.0f), glm::vec3(0.473f, 0.194f, 0.859f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     m_questManager.addQuest("Take a photo of this amazing starting logo.", glm::vec3(112.0f, 15.0f, 82.0f), glm::vec3(-0.14f, 0.047f, -0.989f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     //m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
 
     Credit credit("Authors: Marek and Orestis", glm::ivec2(TEXT_X_POSITION, 900));
     m_creditsManager.addCredit(credit);
+    Credit credit2("THANKS FOR PLAYING!", glm::ivec2(TEXT_X_POSITION, 700));
+    m_creditsManager.addCredit(credit2);
 
     // setup game variables
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
@@ -325,20 +332,28 @@ bool Game::update()
         {
             m_gameFinished = true;
             m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HelicopModel)));
+            m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HelicopterBladesModel)));
         }
 
         if (m_gameFinished)
         {
             engine::Model* heliModel = m_modelManager->getModel(static_cast<unsigned int>(GameModels::HelicopModel));
-            if (heliModel->m_modelMatrix[3][1] > 16.0f)
+            engine::Model* heliModelBlades = m_modelManager->getModel(static_cast<unsigned int>(GameModels::HelicopterBladesModel));
+            if (heliModel->m_modelMatrix[3][1] > 15.0f)
             {
-                heliModel->m_modelMatrix[3][1] -= 0.1f;
+                heliModelBlades->m_modelMatrix = glm::rotate(heliModelBlades->m_modelMatrix, 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+                heliModel->m_modelMatrix[3][1] -= 0.5f;
+                heliModelBlades->m_modelMatrix[3][1] -= 0.5f;
             }
             else if ((m_scene->getCamera()->getPosition().x < 115.0f) && (m_scene->getCamera()->getPosition().x > 105.0f) &&
                 (m_scene->getCamera()->getPosition().z < 75.0f) && (m_scene->getCamera()->getPosition().z > 65.0f))
-            {
+            {               
                 m_creditsStarted = true;
                 m_fadeOutTime = 1.0f;
+            }
+            else 
+            {
+                heliModelBlades->m_modelMatrix = glm::rotate(heliModelBlades->m_modelMatrix, 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
             }
         }
     }
