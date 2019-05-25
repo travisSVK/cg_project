@@ -6,6 +6,7 @@ namespace engine
     Model* ModelManager::createModel(const char* path, unsigned int modelId, const glm::mat4& modelMatrix)
     {
         Model* model = engine::loadModelFromOBJ(path);
+        model->m_enabled = true;
         model->m_modelMatrix = modelMatrix;
         model->m_previousModelMatrix = modelMatrix;
         m_models[modelId] = model;
@@ -20,6 +21,7 @@ namespace engine
     Model* ModelManager::addModel(Model* model, unsigned int modelId)
     {
         Model* model2 = new Model();
+        model2->m_enabled = true;
         model2->m_bitTangents = model->m_bitTangents;
         model2->m_bitTangents_bo = model->m_bitTangents_bo;
         model2->m_filename = model->m_filename;
@@ -39,6 +41,14 @@ namespace engine
         model2->m_vaob = model->m_vaob;
         m_models[modelId] = model2;
         return model2;
+    }
+
+    void ModelManager::disableModel(unsigned int modelId)
+    {
+        if (m_models.find(modelId) != m_models.end()) 
+        {
+            m_models[modelId]->m_enabled = false;
+        }
     }
 
     void ModelManager::destroy()

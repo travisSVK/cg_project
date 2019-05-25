@@ -367,7 +367,8 @@ bool Game::handleEvents()
         {
             cameraPosition += camera->getCameraSpeed() * cameraRight;
             //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * cameraRight));
-        }        
+        }
+        m_modelManager->disableModel(static_cast<unsigned int>(GameModels::StartScreenModel));
     }
     if (state[SDL_SCANCODE_E])
     {

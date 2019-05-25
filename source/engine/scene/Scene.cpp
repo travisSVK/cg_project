@@ -50,11 +50,14 @@ namespace engine
         
         for (auto model : m_models)
         {
-            engine::setUniformSlow(m_sceneProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * model->getModelMatrix());
-            engine::setUniformSlow(m_sceneProgram, "modelViewMatrix", viewMatrix * model->getModelMatrix());
-            engine::setUniformSlow(m_sceneProgram, "normalMatrix", glm::inverse(glm::transpose(viewMatrix * model->getModelMatrix())));
-            engine::setUniformSlow(m_sceneProgram, "modelMatrix", model->getModelMatrix());
-            engine::render(model, showNormalMap);
+            if (model->m_enabled)
+            {
+                engine::setUniformSlow(m_sceneProgram, "modelViewProjectionMatrix", projectionMatrix * viewMatrix * model->getModelMatrix());
+                engine::setUniformSlow(m_sceneProgram, "modelViewMatrix", viewMatrix * model->getModelMatrix());
+                engine::setUniformSlow(m_sceneProgram, "normalMatrix", glm::inverse(glm::transpose(viewMatrix * model->getModelMatrix())));
+                engine::setUniformSlow(m_sceneProgram, "modelMatrix", model->getModelMatrix());
+                engine::render(model, showNormalMap);
+            }
         }
     }
 
