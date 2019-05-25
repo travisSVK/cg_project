@@ -67,13 +67,14 @@ void GameCamera::resetParametersForCameraDisplay(GLuint program, const glm::mat4
     engine::setUniformSlow(program, "modelMatrix", m_cameraModel->getModelMatrix());
 }
 
-void GameCamera::renderCameraFlash(float flashTime)
+void GameCamera::renderCameraFlash(float flashTime, const glm::vec3& color)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glUseProgram(m_cameraFlashProgram);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     engine::setUniformSlow(m_cameraFlashProgram, "flashTime", flashTime);
+    engine::setUniformSlow(m_cameraFlashProgram, "color", color);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     engine::drawFullScreenQuad();

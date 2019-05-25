@@ -19,7 +19,7 @@ public:
     engine::FboInfo* getGameCameraFB();
     void setParametersForCameraDisplay(GLuint program, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);
     void resetParametersForCameraDisplay(GLuint program, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix);
-    void renderCameraFlash(float flashTime);
+    void renderCameraFlash(float flashTime, const glm::vec3& color);
 
 private:
     engine::Model* m_cameraModel;

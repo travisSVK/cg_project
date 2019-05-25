@@ -267,7 +267,7 @@ void Game::initialize()
     m_questManager.addQuest("Take a photo of this amazing starting logo.", glm::vec3(112.0f, 15.0f, 82.0f), glm::vec3(-0.14f, 0.047f, -0.989f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     //m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
 
-    Credit credit("AUTHORS: MAREK AND ORESTIS", glm::ivec2(TEXT_X_POSITION, 900));
+    Credit credit("Authors: Marek and Orestis", glm::ivec2(TEXT_X_POSITION, 900));
     m_creditsManager.addCredit(credit);
 
     // setup game variables
@@ -280,6 +280,7 @@ void Game::initialize()
     m_gameFinished = false;
     m_creditsStarted = false;
     m_flashTime = 0.0f;
+    m_fadeOutTime = 0.0f;
 
     initGL();
 }
@@ -304,12 +305,16 @@ bool Game::update()
     bool exitGame = false;
     if (m_creditsStarted)
     {
-        m_creditsManager.updateCredits();
-        m_creditsManager.renderCredits();
-        exitGame = m_creditsManager.creditsFinished();
-        if (!exitGame)
+        if (m_fadeOutTime <= 0.0f)
         {
-            exitGame = handleEvents();
+            m_creditsManager.start(m_window);
+            m_creditsManager.updateCredits();
+            m_creditsManager.renderCredits();
+            exitGame = m_creditsManager.creditsFinished();
+            if (!exitGame)
+            {
+                exitGame = handleEvents();
+            }
         }
     }
     else
@@ -333,7 +338,7 @@ bool Game::update()
                 (m_scene->getCamera()->getPosition().z < 75.0f) && (m_scene->getCamera()->getPosition().z > 65.0f))
             {
                 m_creditsStarted = true;
-                m_creditsManager.start(m_window);
+                m_fadeOutTime = 1.0f;
             }
         }
     }
@@ -424,7 +429,7 @@ bool Game::handleEvents()
 
 void Game::render()
 {
-    if (!m_creditsStarted)
+    if (!(m_creditsStarted && m_fadeOutTime <= 0.0f))
     {
         glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), float(m_width) / float(m_height), 3.0f, 1000.0f);
         glm::mat4 viewMatrix = glm::lookAt(
@@ -474,8 +479,13 @@ void Game::render()
         m_postfxManager->renderPostFxToMain(m_currentScreenEffect, m_mainFrameBuffer, projectionMatrix, viewMatrix);
         if (m_flashTime > 0.0f)
         {
-            m_gameCamera->renderCameraFlash(m_flashTime);
+            m_gameCamera->renderCameraFlash(m_flashTime, glm::vec3(1.0f));
             m_flashTime -= 0.01f;
+        }
+        if (m_fadeOutTime > 0.0f)
+        {
+            m_gameCamera->renderCameraFlash(1.0f - m_fadeOutTime, glm::vec3(0.0f));
+            m_fadeOutTime -= 0.01f;
         }
 
         CHECK_GL_ERROR();

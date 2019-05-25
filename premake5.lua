@@ -103,7 +103,7 @@ workspace "CGProject"
         os.copyfile("external/SDLttf/lib/x64/SDL2_ttf.dll", "builds/release/SDL2_ttf.dll")
         os.copyfile("external/SDLttf/lib/x64/libfreetype-6.dll", "builds/debug/libfreetype-6.dll")
         os.copyfile("external/SDLttf/lib/x64/libfreetype-6.dll", "builds/release/libfreetype-6.dll")
-        os.copyfile("external/SDLttf/lib/x64/zlib1.dll", "builds/debug/SDL2_ttf.dll")
+        os.copyfile("external/SDLttf/lib/x64/zlib1.dll", "builds/debug/zlib1.dll")
         os.copyfile("external/SDLttf/lib/x64/zlib1.dll", "builds/release/zlib1.dll")
         os.copyfile("external/bin/SDL2.dll", "builds/release/SDL2.dll")
         os.copyfile("external/bin/embree.dll", "builds/debug/embree.dll")

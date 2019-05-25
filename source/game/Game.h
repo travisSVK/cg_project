@@ -45,6 +45,7 @@ private:
     QuestManager m_questManager;
     SDL_Window* m_window;
     float m_flashTime;
+    float m_fadeOutTime;
     int m_width;
     int m_height;
     engine::PostFxManager::PostFxTypes m_currentEffect;

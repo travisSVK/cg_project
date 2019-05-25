@@ -2,24 +2,27 @@
 
 void CreditsManager::start(SDL_Window* window)
 {
-    m_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (m_renderer == NULL)
+    if (!m_renderer)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Renderer could not be created! SDL Error: %s\n", SDL_GetError());
+        m_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+        if (m_renderer == NULL)
+        {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Renderer could not be created! SDL Error: %s\n", SDL_GetError());
+        }
+
+        TTF_Init();
+        m_font = TTF_OpenFont("../scenes/TitilliumWeb-Regular.ttf", 25);
+        if (m_font == NULL)
+        {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "font cannot be created! SDL_Error: %s\n", SDL_GetError());
+        }
+
+        //Initialize renderer color
+        SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+
+        //Clear screen
+        SDL_RenderClear(m_renderer);
     }
-
-    TTF_Init();
-    m_font = TTF_OpenFont("../scenes/EA.ttf", 25);
-    if (m_font == NULL)
-    {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "font cannot be created! SDL_Error: %s\n", SDL_GetError());
-    }
-
-    //Initialize renderer color
-    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-
-    //Clear screen
-    SDL_RenderClear(m_renderer);
 }
 
 
@@ -27,7 +30,7 @@ void CreditsManager::updateCredits()
 {
     for (auto& credit : m_credits)
     {
-        credit.m_position.y -= 0.2f;
+        credit.m_position.y -= 1;
     }
 }
 
@@ -45,8 +48,7 @@ void CreditsManager::renderCredits()
     for (auto& credit : m_credits)
     {
         int textLengthOffset = credit.getText().size() / 2;
-        drawText(credit.m_position.x - (textLengthOffset * 20), credit.m_position.y, credit.getText().c_str());
-        credit.m_position.y -= 1.0f;
+        drawText(credit.m_position.x - (textLengthOffset * 8), credit.m_position.y, credit.getText().c_str());
     }
     SDL_RenderPresent(m_renderer);
     SDL_RenderClear(m_renderer);
