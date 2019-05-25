@@ -47,7 +47,7 @@ namespace engine {
 	SDL_Window * init_window_SDL(std::string caption, int width, int height)
 	{
 		// Initialize SDL 
-		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
 			fprintf(stderr, "%s: %s\n", "Couldn't initialize SDL", SDL_GetError());
 			return nullptr;
 		}

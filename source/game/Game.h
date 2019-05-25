@@ -3,6 +3,7 @@
 #include <SDL_video.h>
 #include "terrain/Heightfield.h"
 #include "gameobjects/QuestManager.h"
+#include "gameobjects/CreditsManager.h"
 
 namespace engine 
 {
@@ -39,6 +40,7 @@ private:
     engine::FboInfo* m_mainFrameBuffer;
     engine::Scene* m_scene;
     engine::HeightField m_heightfield;
+    CreditsManager m_creditsManager;
     GameCamera* m_gameCamera;
     QuestManager m_questManager;
     SDL_Window* m_window;
@@ -51,4 +53,6 @@ private:
     bool m_showTeselatedTerrain;
     bool m_showColliders;
     bool m_showNormalMap;
+    bool m_gameFinished;
+    bool m_creditsStarted;
 };

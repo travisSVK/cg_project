@@ -91,13 +91,14 @@ bool QuestManager::isCurrentDirectionWithinRange(const glm::vec3& direction)
     return false;
 }
 
-void QuestManager::setQuestComplete()
+int QuestManager::setQuestComplete()
 {
     if ((m_quests.size() > 0) && (m_quests.at(m_quests.size() - 1).m_completed))
     {
         m_finishedQuests.push_back(m_quests.back());
         m_quests.pop_back();
     }
+    return m_quests.size();
 }
 
 void QuestManager::setFirstQuestComplete(bool isComplete)

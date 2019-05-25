@@ -28,6 +28,7 @@
 #include "collision/CameraBoundingBox.h"
 #include "Enums.h"
 
+#define TEXT_X_POSITION 920
 
 void Game::initialize()
 {
@@ -50,15 +51,12 @@ void Game::initialize()
     m_environmentManager->createEnvironmentTexture("../scenes/envmaps/001_irradiance.hdr", engine::EnvironmentManager::EnvironmentTextureType::IrradianceMap);
     m_environmentManager->createEnvironmentProgram("shaders/background.vert", "shaders/background.frag");
 
-    // TODO this one is for pseudo lens flare
-    //m_environmentManager->createEnvironmentTexture("../scenes/ghost_color_gradient.psd", engine::EnvironmentManager::EnvironmentTextureType::GradientTexture);
-
     //setup scene
     m_scene = new engine::Scene(glm::vec3(112.0f, 15.0f, 82.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(0.14f, -0.047f, 0.989f)));
     // Load some models.
-    glm::mat4 modelMatrix = glm::translate(60.0f * m_scene->getCamera()->getWorldUp());
-    //m_modelManager->createModel("../scenes/NewShip.obj", static_cast<unsigned int>(GameModels::FighterModel), modelMatrix);
-    //m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::FighterModel)));
+    glm::mat4 modelMatrix = glm::translate(glm::vec3(110.0f, 30.0f, 70.0f));
+    m_modelManager->createModel("../scenes/NewShip.obj", static_cast<unsigned int>(GameModels::HelicopModel), modelMatrix);
+    
     modelMatrix = glm::translate(glm::vec3(-70.0f, 15.0f, 70.0f));
     m_modelManager->createModel("../scenes/photocameraRotated.obj", static_cast<unsigned int>(GameModels::CameraModel), modelMatrix);
     
@@ -257,7 +255,7 @@ void Game::initialize()
 
     // setup quests
     m_questManager.setFirstQuestComplete(false);
-    m_questManager.addQuest("Take a photo of this amazing helipad.", glm::vec3(120.5f, 15.0f, 65.7f), glm::vec3(-0.805f, -0.464f, 0.370f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
+    /*m_questManager.addQuest("Take a photo of this amazing helipad.", glm::vec3(120.5f, 15.0f, 65.7f), glm::vec3(-0.805f, -0.464f, 0.370f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     m_questManager.addQuest("Take a photo of this beautiful lovely gentleman.", glm::vec3(131.0f, 15.0f, 87.0f), glm::vec3(0.975f, -0.111f, 0.190f), static_cast<int>(engine::PostFxManager::PostFxTypes::Sepia), false);
     m_questManager.addQuest("Take a photo of this beautiful house from this angle.", glm::vec3(90.0f, 15.0f, 49.5f), glm::vec3(0.676f, 0.349f, -0.649f), static_cast<int>(engine::PostFxManager::PostFxTypes::DOF), false);
     m_questManager.addQuest("Take a photo of this beautiful sunset over the house in Greyscale.", glm::vec3(113.5f, 15.0f, 91.5f), glm::vec3(-0.458f, 0.173f, -0.872f), static_cast<int>(engine::PostFxManager::PostFxTypes::Grayscale), true);
@@ -265,9 +263,12 @@ void Game::initialize()
     m_questManager.addQuest("Take a photo of this lovely view.", glm::vec3(75.0f, 15.0f, 58), glm::vec3(0.729f, 0.001f, 0.685f), static_cast<int>(engine::PostFxManager::PostFxTypes::Bloom), false);
     m_questManager.addQuest("Take a photo of this little bench pixelated.", glm::vec3(55.5f, 15.0f, 24.5f), glm::vec3(-0.873f, -0.110f, 0.46f), static_cast<int>(engine::PostFxManager::PostFxTypes::Mosaic), false);
     m_questManager.addQuest("Take a photo of this little bench.", glm::vec3(55.5f, 15.0f, 24.5f), glm::vec3(-0.873f, -0.110f, 0.46f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
-    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(102.0f, 15.0f, 88.0f), glm::vec3(0.473f, 0.194f, 0.859f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
+    m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(102.0f, 15.0f, 88.0f), glm::vec3(0.473f, 0.194f, 0.859f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);*/
     m_questManager.addQuest("Take a photo of this amazing starting logo.", glm::vec3(112.0f, 15.0f, 82.0f), glm::vec3(-0.14f, 0.047f, -0.989f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     //m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
+
+    Credit credit("AUTHORS: MAREK AND ORESTIS", glm::ivec2(TEXT_X_POSITION, 900));
+    m_creditsManager.addCredit(credit);
 
     // setup game variables
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
@@ -276,6 +277,8 @@ void Game::initialize()
     m_gameCameraActive = false;
     m_showColliders = false;
     m_showTeselatedTerrain = false;
+    m_gameFinished = false;
+    m_creditsStarted = false;
     m_flashTime = 0.0f;
 
     initGL();
@@ -298,10 +301,43 @@ void Game::initGL()
 
 bool Game::update()
 {
-    bool exitGame = handleEvents();
-    m_collisionManager->checkCollision();
-    m_questManager.setQuestComplete();
+    bool exitGame = false;
+    if (m_creditsStarted)
+    {
+        m_creditsManager.updateCredits();
+        m_creditsManager.renderCredits();
+        exitGame = m_creditsManager.creditsFinished();
+        if (!exitGame)
+        {
+            exitGame = handleEvents();
+        }
+    }
+    else
+    {
+        exitGame = handleEvents();
+        m_collisionManager->checkCollision();
+        if ((m_questManager.setQuestComplete() == 0) && (!m_gameFinished))
+        {
+            m_gameFinished = true;
+            m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HelicopModel)));
+        }
 
+        if (m_gameFinished)
+        {
+            engine::Model* heliModel = m_modelManager->getModel(static_cast<unsigned int>(GameModels::HelicopModel));
+            if (heliModel->m_modelMatrix[3][1] > 16.0f)
+            {
+                heliModel->m_modelMatrix[3][1] -= 0.1f;
+            }
+            else if ((m_scene->getCamera()->getPosition().x < 115.0f) && (m_scene->getCamera()->getPosition().x > 105.0f) &&
+                (m_scene->getCamera()->getPosition().z < 75.0f) && (m_scene->getCamera()->getPosition().z > 65.0f))
+            {
+                m_creditsStarted = true;
+                m_creditsManager.start(m_window);
+            }
+        }
+    }
+    
     return exitGame;
 }
 
@@ -346,27 +382,23 @@ bool Game::handleEvents()
     const uint8_t *state = SDL_GetKeyboardState(nullptr);
     glm::vec3 cameraRight = glm::cross(camera->getDirection(), camera->getWorldUp());
     glm::vec3 cameraPosition = camera->getPosition();
-    if (m_questManager.getFirstQuestComplete())
+    if (m_questManager.getFirstQuestComplete() && !m_creditsStarted)
     {
         if (state[SDL_SCANCODE_W])
         {
             cameraPosition += camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
-            //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
         }
         if (state[SDL_SCANCODE_S])
         {
             cameraPosition -= camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z);
-            //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * glm::vec3(camera->getDirection().x, 0.0f, camera->getDirection().z)));
         }
         if (state[SDL_SCANCODE_A])
         {
             cameraPosition -= camera->getCameraSpeed() * cameraRight;
-            //camera->setPosition(camera->getPosition() - (camera->getCameraSpeed() * cameraRight));
         }
         if (state[SDL_SCANCODE_D])
         {
             cameraPosition += camera->getCameraSpeed() * cameraRight;
-            //camera->setPosition(camera->getPosition() + (camera->getCameraSpeed() * cameraRight));
         }
         m_modelManager->disableModel(static_cast<unsigned int>(GameModels::StartScreenModel));
     }
@@ -392,62 +424,65 @@ bool Game::handleEvents()
 
 void Game::render()
 {
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), float(m_width) / float(m_height), 3.0f, 1000.0f);
-    glm::mat4 viewMatrix = glm::lookAt(
-        m_scene->getCamera()->getPosition(), 
-        m_scene->getCamera()->getPosition() + m_scene->getCamera()->getDirection(), 
-        m_scene->getCamera()->getWorldUp());
-
-    // render environment
-    glBindFramebuffer(GL_FRAMEBUFFER, m_mainFrameBuffer->getFrameBufferId());
-    glViewport(0, 0, m_width, m_height);
-    glClearColor(0.2, 0.2, 0.8, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(m_environmentManager->getEnvironmentProgram());
-    m_postfxManager->setShaderValues(m_currentEffect, m_environmentManager->getEnvironmentProgram());
-    m_environmentManager->renderEnvironment(projectionMatrix, viewMatrix, m_scene->getCamera()->getPosition());
-    
-    //render sun
-    /*glUseProgram(m_scene->getSceneProgram());
-    m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
-    m_scene->renderSun(projectionMatrix, viewMatrix);*/
-
-    // render terrain
-    m_postfxManager->setShaderValues(m_currentEffect, m_heightfield.useProgram());
-    m_heightfield.useProgram();
-    m_heightfield.render(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier(), m_scene->getSun(), m_showTeselatedTerrain);
-
-    // render scene
-    glUseProgram(m_scene->getSceneProgram());
-    m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
-    m_scene->renderScene(projectionMatrix, viewMatrix, m_environmentManager->getEnvironmentMultiplier(), m_showNormalMap);
-    
-    if (m_gameCameraActive)
+    if (!m_creditsStarted)
     {
-        m_postfxManager->renderPostFx(m_currentEffect, m_mainFrameBuffer, m_gameCamera->getGameCameraFB(), projectionMatrix, viewMatrix);
-        if (m_useLensFlare)
-        {
-            m_flareManager->render(viewMatrix, projectionMatrix, m_scene->getSun()->getPosition(), m_mainFrameBuffer->getDepthBuffer());
-        }
+        glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), float(m_width) / float(m_height), 3.0f, 1000.0f);
+        glm::mat4 viewMatrix = glm::lookAt(
+            m_scene->getCamera()->getPosition(),
+            m_scene->getCamera()->getPosition() + m_scene->getCamera()->getDirection(),
+            m_scene->getCamera()->getWorldUp());
+
+        // render environment
         glBindFramebuffer(GL_FRAMEBUFFER, m_mainFrameBuffer->getFrameBufferId());
-        glUseProgram(m_scene->getSceneProgram());
-        m_gameCamera->renderGameCamera(m_scene->getSceneProgram(), viewMatrix, projectionMatrix);
-    }
-    if (m_showColliders)
-    {
-        m_collisionManager->renderColliders(viewMatrix, projectionMatrix);
-    }
-    m_postfxManager->renderPostFxToMain(m_currentScreenEffect, m_mainFrameBuffer, projectionMatrix, viewMatrix);
-    if (m_flashTime > 0.0f)
-    {
-        m_gameCamera->renderCameraFlash(m_flashTime);
-        m_flashTime -= 0.01f;
-    }
-    
-    CHECK_GL_ERROR();
+        glViewport(0, 0, m_width, m_height);
+        glClearColor(0.2, 0.2, 0.8, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glUseProgram(m_environmentManager->getEnvironmentProgram());
+        m_postfxManager->setShaderValues(m_currentEffect, m_environmentManager->getEnvironmentProgram());
+        m_environmentManager->renderEnvironment(projectionMatrix, viewMatrix, m_scene->getCamera()->getPosition());
 
-    gui();
-    SDL_GL_SwapWindow(m_window);
+        //render sun
+        /*glUseProgram(m_scene->getSceneProgram());
+        m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
+        m_scene->renderSun(projectionMatrix, viewMatrix);*/
+
+        // render terrain
+        m_postfxManager->setShaderValues(m_currentEffect, m_heightfield.useProgram());
+        m_heightfield.useProgram();
+        m_heightfield.render(viewMatrix, projectionMatrix, m_scene->getCamera()->getPosition(), m_environmentManager->getEnvironmentMultiplier(), m_scene->getSun(), m_showTeselatedTerrain);
+
+        // render scene
+        glUseProgram(m_scene->getSceneProgram());
+        m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
+        m_scene->renderScene(projectionMatrix, viewMatrix, m_environmentManager->getEnvironmentMultiplier(), m_showNormalMap);
+
+        if (m_gameCameraActive)
+        {
+            m_postfxManager->renderPostFx(m_currentEffect, m_mainFrameBuffer, m_gameCamera->getGameCameraFB(), projectionMatrix, viewMatrix);
+            if (m_useLensFlare)
+            {
+                m_flareManager->render(viewMatrix, projectionMatrix, m_scene->getSun()->getPosition(), m_mainFrameBuffer->getDepthBuffer());
+            }
+            glBindFramebuffer(GL_FRAMEBUFFER, m_mainFrameBuffer->getFrameBufferId());
+            glUseProgram(m_scene->getSceneProgram());
+            m_gameCamera->renderGameCamera(m_scene->getSceneProgram(), viewMatrix, projectionMatrix);
+        }
+        if (m_showColliders)
+        {
+            m_collisionManager->renderColliders(viewMatrix, projectionMatrix);
+        }
+        m_postfxManager->renderPostFxToMain(m_currentScreenEffect, m_mainFrameBuffer, projectionMatrix, viewMatrix);
+        if (m_flashTime > 0.0f)
+        {
+            m_gameCamera->renderCameraFlash(m_flashTime);
+            m_flashTime -= 0.01f;
+        }
+
+        CHECK_GL_ERROR();
+
+        gui();
+        SDL_GL_SwapWindow(m_window);
+    }
 }
 
 void Game::gui()

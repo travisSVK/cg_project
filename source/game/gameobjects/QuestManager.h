@@ -13,7 +13,7 @@ public:
     bool isCurrentPositionWithinRange(const glm::vec3& position);
     bool isCurrentDirectionWithinRange(const glm::vec3& direction);
     std::vector<Quest> getFinishedQuests();
-    void setQuestComplete();
+    int setQuestComplete();
 
     void setFirstQuestComplete(bool isComplete);
     bool getFirstQuestComplete();

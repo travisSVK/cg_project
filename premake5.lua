@@ -19,6 +19,18 @@ function linkSDL()
     filter {}
 end
 
+function includeTTF()
+    includedirs "external/SDLttf/include"
+end
+
+function linkTTF()
+    libdirs "external/SDLttf/lib/x64/"
+    filter "kind:not StaticLib"
+        --links { "SDL2_ttf", "libfreetype-6", "zlib1" }
+        links { "SDL2_ttf" }
+    filter {}
+end
+
 function includeEmbree()
     includedirs "external/embree2/include"
 end
@@ -87,6 +99,13 @@ workspace "CGProject"
     filter { "system:windows" }
         os.copyfile("external/bin/SDL2.dll", "builds/debug/SDL2.dll")
         os.copyfile("external/bin/SDL2.dll", "builds/release/SDL2.dll")
+        os.copyfile("external/SDLttf/lib/x64/SDL2_ttf.dll", "builds/debug/SDL2_ttf.dll")
+        os.copyfile("external/SDLttf/lib/x64/SDL2_ttf.dll", "builds/release/SDL2_ttf.dll")
+        os.copyfile("external/SDLttf/lib/x64/libfreetype-6.dll", "builds/debug/libfreetype-6.dll")
+        os.copyfile("external/SDLttf/lib/x64/libfreetype-6.dll", "builds/release/libfreetype-6.dll")
+        os.copyfile("external/SDLttf/lib/x64/zlib1.dll", "builds/debug/SDL2_ttf.dll")
+        os.copyfile("external/SDLttf/lib/x64/zlib1.dll", "builds/release/zlib1.dll")
+        os.copyfile("external/bin/SDL2.dll", "builds/release/SDL2.dll")
         os.copyfile("external/bin/embree.dll", "builds/debug/embree.dll")
         os.copyfile("external/bin/embree.dll", "builds/release/embree.dll")
         os.copyfile("external/bin/glew32.dll", "builds/debug/glew32.dll")
@@ -133,6 +152,8 @@ function use_engine()
     includeImgui()
     includeStb()
     includeTiny()
+    includeTTF()
+    linkTTF()
 end
 
 project "game"
