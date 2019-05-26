@@ -255,8 +255,8 @@ void Game::initialize()
 
     //setup terrain
     m_heightfield.generateMesh(512);
-    m_heightfield.loadHeightField("../scenes/nlsFinland/terrainHeightmap.png");
-    m_heightfield.loadDiffuseTexture("../scenes/nlsFinland/testText.jpg");
+    m_heightfield.loadHeightField("../scenes/terrainHeightmap.png");
+    m_heightfield.loadDiffuseTexture("../scenes/testText.jpg");
 
     // setup quests
     m_questManager.setFirstQuestComplete(false);
