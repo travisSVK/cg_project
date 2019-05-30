@@ -1,10 +1,11 @@
 #pragma once
 #include "postfx/PostFxManager.h"
 #include <SDL_video.h>
+#include <chrono>
 #include "terrain/Heightfield.h"
 #include "gameobjects/QuestManager.h"
 #include "gameobjects/CreditsManager.h"
-
+#include "ParticleSystem.h"
 namespace engine 
 {
     class Scene;
@@ -22,11 +23,12 @@ public:
 
     void initialize();
     bool update();
-    void render();
+    void render(float deltaTime);
     void destroy();
 
 private:
     void initGL();
+    void initParticles();
     bool handleEvents();
     void gui();
 
@@ -40,6 +42,7 @@ private:
     engine::FboInfo* m_mainFrameBuffer;
     engine::Scene* m_scene;
     engine::HeightField m_heightfield;
+    engine::ParticleSystem* m_particle_system;
     CreditsManager m_creditsManager;
     GameCamera* m_gameCamera;
     QuestManager m_questManager;

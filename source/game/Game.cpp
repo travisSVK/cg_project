@@ -3,6 +3,7 @@
 // externals
 #include <SDL.h>
 #include <stb_image.h>
+#include <algorithm>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 #include "imgui.h"
@@ -28,6 +29,8 @@
 #include "collision/CameraBoundingBox.h"
 #include "Enums.h"
 
+#include "ParticleSystem.h"
+
 #define TEXT_X_POSITION 920
 
 void Game::initialize()
@@ -38,6 +41,8 @@ void Game::initialize()
     m_environmentManager = new engine::EnvironmentManager(1.5f);
     m_collisionManager = new engine::CollisionManager(new engine::SATCollisionStrategy());
     
+    //initParticles();
+    initParticles();
     
     // setup environment
     const int roughnesses = 8;
@@ -103,7 +108,7 @@ void Game::initialize()
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
 
-   /* modelMatrix = glm::translate(glm::vec3(35.0, 10.0, 30.0));
+    modelMatrix = glm::translate(glm::vec3(35.0, 10.0, 30.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
@@ -149,7 +154,7 @@ void Game::initialize()
     
     modelMatrix = glm::translate(glm::vec3(20.0, 10.0, -5.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
-    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);*/
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(110.0, 10.0, 110.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
@@ -159,7 +164,7 @@ void Game::initialize()
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
-    /*modelMatrix = glm::translate(glm::vec3(100.0, 10.0, 110.0));
+    modelMatrix = glm::translate(glm::vec3(100.0, 10.0, 110.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
@@ -173,7 +178,7 @@ void Game::initialize()
 
     modelMatrix = glm::translate(glm::vec3(95.0, 10.0, 115.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
-    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);*/
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
 
     modelMatrix = glm::translate(glm::vec3(90.0, 10.0, 120.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
@@ -243,9 +248,9 @@ void Game::initialize()
     m_modelManager->createModel("../scenes/helipad.obj", static_cast<unsigned int>(GameModels::HeliPadModel), modelMatrix);
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);
 
-    /*modelMatrix = glm::translate(glm::vec3(110.0f,15.0f, 70.0f));
+    modelMatrix = glm::translate(glm::vec3(110.0f,15.0f, 70.0f));
     m_modelManager->createModel("../scenes/testDice.obj", static_cast<unsigned int>(GameModels::HeliPadModel), modelMatrix);
-    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);*/
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HeliPadModel)), modelMatrix);
 
     modelMatrix = glm::translate(glm::vec3(110.0f, 15.0f, 70.0f));
     m_modelManager->createModel("../scenes/startScreen.obj", static_cast<unsigned int>(GameModels::StartScreenModel), modelMatrix);
@@ -306,6 +311,13 @@ void Game::initGL()
     m_flareManager = new engine::FlareManager(0.16f, m_width, m_height);
     m_postfxManager = new engine::PostFxManager(m_width, m_height);
     m_gameCamera = new GameCamera(m_modelManager->getModel(static_cast<unsigned int>(GameModels::CameraModel)), m_width, m_height);
+}
+
+void Game::initParticles()
+{
+    m_particle_system = new engine::ParticleSystem(500);
+    m_particle_system->init_particle_system(m_particle_system);
+
 }
 
 bool Game::update()
@@ -443,7 +455,7 @@ bool Game::handleEvents()
     return quitEvent;
 }
 
-void Game::render()
+void Game::render(float deltaTime)
 {
     if (!(m_creditsStarted && m_fadeOutTime <= 0.0f))
     {
@@ -451,7 +463,7 @@ void Game::render()
         glm::mat4 viewMatrix = glm::lookAt(
             m_scene->getCamera()->getPosition(),
             m_scene->getCamera()->getPosition() + m_scene->getCamera()->getDirection(),
-            m_scene->getCamera()->getWorldUp());
+            m_scene->getCamera()->getWorldUp());        
 
         // render environment
         glBindFramebuffer(GL_FRAMEBUFFER, m_mainFrameBuffer->getFrameBufferId());
@@ -476,6 +488,15 @@ void Game::render()
         glUseProgram(m_scene->getSceneProgram());
         m_postfxManager->setShaderValues(m_currentEffect, m_scene->getSceneProgram());
         m_scene->renderScene(projectionMatrix, viewMatrix, m_environmentManager->getEnvironmentMultiplier(), m_showNormalMap);
+
+        if (m_questManager.getFirstQuestComplete() && !m_creditsStarted)
+        {
+            //render particles
+            m_postfxManager->setShaderValues(m_currentEffect, m_particle_system->useProgram());
+            m_particle_system->useProgram();
+            m_particle_system->render(m_particle_system, m_modelManager->getModel(static_cast<unsigned int>(GameModels::HouseModel))->getModelMatrix(),
+                viewMatrix, projectionMatrix, m_width, m_height, deltaTime);
+        }
 
         if (m_gameCameraActive)
         {
@@ -503,6 +524,9 @@ void Game::render()
             m_gameCamera->renderCameraFlash(1.0f - m_fadeOutTime, glm::vec3(0.0f));
             m_fadeOutTime -= 0.01f;
         }
+
+        //render particles
+        
 
         CHECK_GL_ERROR();
 
@@ -674,6 +698,7 @@ void Game::destroy()
     m_postfxManager->destroy();
     m_mainFrameBuffer->destroy();
     m_scene->destroy();
+    m_particle_system->destroy();
     delete m_collisionManager;
     delete m_modelManager;
     delete m_flareManager;
@@ -681,5 +706,6 @@ void Game::destroy()
     delete m_postfxManager;
     delete m_mainFrameBuffer;
     delete m_scene;
+    delete m_particle_system;
     engine::shutDown(m_window);
 }
