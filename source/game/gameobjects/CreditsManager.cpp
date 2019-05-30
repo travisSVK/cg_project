@@ -47,8 +47,8 @@ void CreditsManager::renderCredits()
 {
     for (auto& credit : m_credits)
     {
-        int textLengthOffset = credit.getText().size() / 2;
-        drawText(credit.m_position.x - (textLengthOffset * 8), credit.m_position.y, credit.getText().c_str());
+        //int textLengthOffset = credit.getText().size() / 2;
+        drawText(credit.m_position.x, credit.m_position.y, credit.getText().c_str());
     }
     SDL_RenderPresent(m_renderer);
     SDL_RenderClear(m_renderer);

@@ -29,8 +29,8 @@ namespace engine
         engine::setUniformSlow(program, "farSharpPlane", 10.0f);
         engine::setUniformSlow(program, "nearBlurryPlane", 110.0f);
         engine::setUniformSlow(program, "farBlurryPlane", -50.0f);
-        engine::setUniformSlow(program, "farCoC", -4);
-        engine::setUniformSlow(program, "nearCoC", 4);
+        engine::setUniformSlow(program, "farCoC", -5);
+        engine::setUniformSlow(program, "nearCoC", 10);
         engine::setUniformSlow(program, "focusCoC", 0.0f);
     }
 

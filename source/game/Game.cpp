@@ -103,7 +103,7 @@ void Game::initialize()
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
 
-    modelMatrix = glm::translate(glm::vec3(35.0, 10.0, 30.0));
+   /* modelMatrix = glm::translate(glm::vec3(35.0, 10.0, 30.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
@@ -149,7 +149,7 @@ void Game::initialize()
     
     modelMatrix = glm::translate(glm::vec3(20.0, 10.0, -5.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
-    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);*/
     
     modelMatrix = glm::translate(glm::vec3(110.0, 10.0, 110.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
@@ -159,15 +159,11 @@ void Game::initialize()
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
-    modelMatrix = glm::translate(glm::vec3(100.0, 10.0, 110.0));
+    /*modelMatrix = glm::translate(glm::vec3(100.0, 10.0, 110.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
     modelMatrix = glm::translate(glm::vec3(90.0, 10.0, 110.0));
-    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
-    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
-    
-    modelMatrix = glm::translate(glm::vec3(90.0, 10.0, 120.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
     
@@ -176,6 +172,10 @@ void Game::initialize()
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
 
     modelMatrix = glm::translate(glm::vec3(95.0, 10.0, 115.0));
+    treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
+    m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);*/
+
+    modelMatrix = glm::translate(glm::vec3(90.0, 10.0, 120.0));
     treeModels.push_back(m_modelManager->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), static_cast<unsigned int>(GameModels::TreeModel)));
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::TreeModel)), modelMatrix);
 
@@ -196,7 +196,7 @@ void Game::initialize()
     modelMatrix = glm::translate(glm::vec3(100.0, 17.8, 30.0));
     m_modelManager->createModel("../scenes/house.obj", static_cast<unsigned int>(GameModels::HouseModel), modelMatrix);
     m_scene->addModel(m_modelManager->getModel(static_cast<unsigned int>(GameModels::HouseModel)), modelMatrix);
-    engine::BoundingBox* houseBoundingBox = new engine::BoundingBox(glm::vec3(27.0f, 10.0f, 15.0f), -0.227f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::HouseModel)));
+    engine::BoundingBox* houseBoundingBox = new engine::BoundingBox(glm::vec3(27.0f, 10.0f, 10.0f), -0.227f, m_modelManager->getModel(static_cast<unsigned int>(GameModels::HouseModel)));
     m_collisionManager->addStaticCollider(houseBoundingBox);
 
     modelMatrix = glm::translate(glm::vec3(80.0, 13.0, 70.0));
@@ -254,7 +254,7 @@ void Game::initialize()
 
 
     //setup terrain
-    m_heightfield.generateMesh(512);
+    m_heightfield.generateMesh(256);
     m_heightfield.loadHeightField("../scenes/terrainHeightmap.png");
     m_heightfield.loadDiffuseTexture("../scenes/testText.jpg");
 
@@ -272,10 +272,11 @@ void Game::initialize()
     m_questManager.addQuest("Take a photo of this amazing starting logo.", glm::vec3(112.0f, 15.0f, 82.0f), glm::vec3(-0.14f, 0.047f, -0.989f), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
     //m_questManager.addQuest("Take a photo of this nice tree.", glm::vec3(-70.0f, 15.0f, 70.0f), glm::normalize(glm::vec3(0.0f) - glm::vec3(-70.0f, 15.0f, 70.0f)), static_cast<int>(engine::PostFxManager::PostFxTypes::None), false);
 
-    Credit credit("Authors: Marek and Orestis", glm::ivec2(TEXT_X_POSITION, 900));
+    Credit credit("Thanks for playing!", glm::ivec2(TEXT_X_POSITION - 60, 700));
     m_creditsManager.addCredit(credit);
-    Credit credit2("THANKS FOR PLAYING!", glm::ivec2(TEXT_X_POSITION, 700));
-    m_creditsManager.addCredit(credit2);
+    credit.setText("Authors: Marek and Orestis");
+    credit.setPosition(glm::ivec2(TEXT_X_POSITION - 100, 900));
+    m_creditsManager.addCredit(credit);
 
     // setup game variables
     m_currentEffect = engine::PostFxManager::PostFxTypes::None;
@@ -656,7 +657,7 @@ void Game::gui()
             m_showNormalMap = true;
         }
     }
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::End();
 
     // Render the GUI.

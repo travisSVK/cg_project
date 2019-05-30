@@ -43,7 +43,7 @@ void main()
    	//normal_fs = interpolate3D(normal_tes[0], normal_tes[1], normal_tes[2]);
    	vec3 position = interpolate3D(pos_tes[0], pos_tes[1], pos_tes[2]);
 
-    const vec2 size = vec2(2.0,0.0);
+    const vec2 size = vec2(0.0005,0.0);
     const ivec3 off = ivec3(-1,0,1);
 
     vec4 height = texture(heightMap, texCoord);

@@ -47,7 +47,7 @@ namespace engine
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
         int w, h, comp;
-        unsigned char* image = stbi_load("../scenes/sun.png", &w, &h, &comp, STBI_rgb_alpha);
+        unsigned char* image = stbi_load("../scenes/tex6.png", &w, &h, &comp, STBI_rgb_alpha);
         if (image == nullptr) {
             std::cout << "Failed to load image: sun.\n";
             return;

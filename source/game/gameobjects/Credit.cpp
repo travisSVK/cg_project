@@ -6,3 +6,13 @@ std::string Credit::getText()
 {
     return m_text;
 }
+
+void Credit::setText(const std::string& text)
+{
+    m_text = text;
+}
+
+void Credit::setPosition(const glm::ivec2& position)
+{
+    m_position = position;
+}

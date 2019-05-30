@@ -32,13 +32,13 @@ void main()
     // blur kernel for depth of field; it is scaled to the actual
     // kernel at each pixel.
 	//    Custom disk-like // vs. Gaussian
-    kernel[6] = 0.00; //0.00000000000000;  // Weight applied to outside-radius values
-    kernel[5] = 0.50;//0.04153263993208;
-    kernel[4] = 0.60;//0.06352050813141;
-    kernel[3] = 0.75;//0.08822292796029;
-    kernel[2] = 0.90;//0.11143948794984;
-    kernel[1] = 1.00;//0.12815541114232;
-    kernel[0] = 1.00;//0.13425804976814;
+    kernel[6] = 0.00000000000000;  // Weight applied to outside-radius values
+    kernel[5] = 0.04153263993208;
+    kernel[4] = 0.06352050813141;
+    kernel[3] = 0.08822292796029;
+    kernel[2] = 0.11143948794984;
+    kernel[1] = 0.12815541114232;
+    kernel[0] = 0.13425804976814;
 
 	focusFarResult = vec4(0.0);
     float blurWeightSum = 0.0f;
